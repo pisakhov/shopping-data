@@ -14,27 +14,17 @@ A web-based data marketplace interface for selecting API endpoints and field map
 ## Usage
 
 1. Open `index.html` in a web browser
-2. Load a JSON data folder containing market data files
-3. Select a provider (Bloomberg, FactSet, Haver, LSEG)
-4. Choose a product and API endpoint
-5. Map fields to PostgreSQL types
-6. Add to bundle with a custom table name
-7. Deploy the bundle when ready
-
-## Data Folder Structure
-
-Place your JSON data files in the `./data` directory with filenames like:
-- `bloomberg_eod_pricing.json`
-- `bloomberg_equities.json`
-- `factset_income_statements.json`
-- `haver_macro.json`
-- `lseg_esg_scores.json`
+2. Select a provider (Bloomberg, FactSet, Haver, LSEG)
+3. Choose a product and API endpoint
+4. Map fields to PostgreSQL types
+5. Add to bundle with a custom table name
+6. Deploy the bundle when ready
 
 ## Technology Stack
 
 - **Frontend**: HTML, Tailwind CSS, Vanilla JavaScript
 - **Backend**: PostgreSQL (for deployed bundles)
-- **Data Sources**: JSON files for market data
+- **Data Sources**: Hardcoded catalog with sample API responses
 
 ## PostgreSQL Field Types Supported
 
