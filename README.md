@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Shopping Data Marketplace
 
-## Getting Started
+A web-based data marketplace interface for selecting API endpoints and field mappings to create PostgreSQL tables. This tool provides an interactive UI for browsing financial data providers, selecting API endpoints, configuring field mappings, and deploying data bundles to PostgreSQL.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Multi-Provider Catalog**: Browse data from Bloomberg, FactSet, Haver, and LSEG
+- **Interactive Field Mapping**: Select and map API fields to PostgreSQL column types
+- **Nested Data Support**: Handle arrays and nested JSON structures with multiple storage strategies
+- **Bundle Management**: Create and deploy multiple tables as a single bundle
+- **Test & Preview**: Preview data and test API connections before deployment
+- **Scheduling**: Configure hourly, daily, weekly, or monthly data refresh schedules
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Usage
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Open `index.html` in a web browser
+2. Load a JSON data folder containing market data files
+3. Select a provider (Bloomberg, FactSet, Haver, LSEG)
+4. Choose a product and API endpoint
+5. Map fields to PostgreSQL types
+6. Add to bundle with a custom table name
+7. Deploy the bundle when ready
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Data Folder Structure
 
-## Learn More
+Place your JSON data files in the `./data` directory with filenames like:
+- `bloomberg_eod_pricing.json`
+- `bloomberg_equities.json`
+- `factset_income_statements.json`
+- `haver_macro.json`
+- `lseg_esg_scores.json`
 
-To learn more about Next.js, take a look at the following resources:
+## Technology Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Frontend**: HTML, Tailwind CSS, Vanilla JavaScript
+- **Backend**: PostgreSQL (for deployed bundles)
+- **Data Sources**: JSON files for market data
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## PostgreSQL Field Types Supported
 
-## Deploy on Vercel
+- TEXT
+- VARCHAR(255)
+- INTEGER
+- BIGINT
+- DECIMAL
+- TIMESTAMP
+- DATE
+- BOOLEAN
+- JSONB
+- UUID
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Nested Data Strategies
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **JSONB**: Store nested structures as JSONB
+- **child_table**: Create separate child tables
+- **flatten**: Flatten nested fields to root level
+
+## License
+
+MIT

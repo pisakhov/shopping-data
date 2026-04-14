@@ -1,0 +1,41 @@
+{
+  "metadata": {
+    "vendor": "Bloomberg",
+    "api": "B-PIPE",
+    "product": "Equities Real-Time",
+    "version": "1.0"
+  },
+  "data": [
+    {
+      "timestamp": "2024-01-15T09:30:00Z",
+      "symbol": "AAPL US",
+      "price": 185.50,
+      "volume": 1500000,
+      "bid": 185.48,
+      "ask": 185.52,
+      "trades": [
+        { "id": "T001", "side": "BUY", "size": 1000, "price": 185.50, "participant": "HF1" },
+        { "id": "T002", "side": "BUY", "size": 500, "price": 185.51, "participant": "MF2" },
+        { "id": "T003", "side": "SELL", "size": 2000, "price": 185.52, "participant": "HF3" }
+      ],
+      "quotes": [
+        { "exchange": "NASDAQ", "bid_size": 5000, "ask_size": 3000, "last_trade_time": "09:30:01" },
+        { "exchange": "NYSE", "bid_size": 8000, "ask_size": 6000, "last_trade_time": "09:30:02" }
+      ]
+    },
+    {
+      "timestamp": "2024-01-15T09:30:01Z",
+      "symbol": "MSFT US",
+      "price": 378.25,
+      "volume": 800000,
+      "bid": 378.20,
+      "ask": 378.30,
+      "trades": [
+        { "id": "T004", "side": "BUY", "size": 2000, "price": 378.25, "participant": "AM1" }
+      ],
+      "quotes": [
+        { "exchange": "NASDAQ", "bid_size": 3000, "ask_size": 2500, "last_trade_time": "09:30:01" }
+      ]
+    }
+  ]
+}

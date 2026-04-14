@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "vendor": "FactSet",
+    "api": "Fundamentals",
+    "product": "Income Statements",
+    "version": "1.0"
+  },
+  "data": [
+    {
+      "company_id": "AAPL",
+      "company_name": "Apple Inc",
+      "fiscal_year": 2024,
+      "fiscal_quarter": 1,
+      "currency": "USD",
+      "revenue": 119575000000,
+      "cost_of_revenue": 63559000000,
+      "gross_profit": 56016000000,
+      "operating_expenses": 14772000000,
+      "operating_income": 41241000000,
+      "net_income": 33630000000,
+      "eps": 2.18,
+      "segments": [
+        { "name": "iPhone", "revenue": 69700000000, "operating_income": 25238000000 },
+        { "name": "Mac", "revenue": 7770000000, "operating_income": 2840000000 },
+        { "name": "iPad", "revenue": 5560000000, "operating_income": 1780000000 },
+        { "name": "Wearables", "revenue": 8010000000, "operating_income": 2240000000 },
+        { "name": "Services", "revenue": 22923000000, "operating_income": 9126000000 }
+      ]
+    },
+    {
+      "company_id": "MSFT",
+      "company_name": "Microsoft Corporation",
+      "fiscal_year": 2024,
+      "fiscal_quarter": 2,
+      "currency": "USD",
+      "revenue": 62020000000,
+      "cost_of_revenue": 20341000000,
+      "gross_profit": 41679000000,
+      "operating_expenses": 16215000000,
+      "operating_income": 27027000000,
+      "net_income": 20190000000,
+      "eps": 2.93,
+      "segments": [
+        { "name": "Intelligent Cloud", "revenue": 24200000000, "operating_income": 8960000000 },
+        { "name": "Productivity", "revenue": 18800000000, "operating_income": 8140000000 },
+        { "name": "More Personal Computing", "revenue": 19020000000, "operating_income": 5587000000 }
+      ]
+    }
+  ]
+}

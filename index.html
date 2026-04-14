@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Data Marketplace</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink:  '#0F1632',
+            citi: '#255BE3',
+            danger: '#FF3C28',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background: #f4f5f8; }
+    .log-success { color: #4ade80; }
+    .log-error   { color: #FF3C28; }
+    .log-info    { color: #255BE3; }
+    .log-warn    { color: #fbbf24; }
+    ::-webkit-scrollbar       { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0F1632; }
+    ::-webkit-scrollbar-thumb { background: #255BE3; border-radius: 3px; }
+    .fade-in { animation: fadeIn 0.15s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .border-l-amber { border-left: 4px solid #f59e0b !important; }
+    .btn-citi   { background: #255BE3; color: #fff; }
+    .btn-citi:hover { background: #1a47c4; }
+    .btn-ink    { background: #0F1632; color: #fff; }
+    .btn-ink:hover  { background: #1a2550; }
+    .active-sel { background: #255BE3 !important; color: #fff !important; border-color: #255BE3 !important; }
+    .panel-bg   { background: #0F1632; }
+    .panel-border { border-color: #1e2d5a; }
+    .panel-card { background: #162044; border: 1px solid #1e2d5a; }
+    .panel-muted { color: #8896b8; }
+  </style>
+</head>
+<body class="h-screen overflow-hidden" onload="App.init()">
+
+  <div class="h-full flex">
+
+    <!-- Left: Selection (42%) -->
+    <div class="w-[42%] p-4 overflow-y-auto bg-white border-r border-gray-200">
+      <div class="max-w-2xl mx-auto space-y-3">
+
+        <div class="flex items-center justify-between">
+          <h1 class="text-lg font-bold tracking-tight text-ink">API → Postgres</h1>
+          <button onclick="App.reset()" class="text-xs text-gray-400 hover:text-ink transition-colors">↺ Reset</button>
+        </div>
+
+        <!-- Step 1: Folder Path -->
+        <div class="bg-white rounded-lg border border-gray-200 p-3">
+          <label class="text-xs font-semibold text-gray-500 block mb-2">1. JSON Data Folder</label>
+          <div class="flex gap-2">
+            <input type="text" id="folder-path" value="./data" placeholder="./data"
+              class="flex-1 px-3 py-2 border rounded text-sm font-mono focus:outline-none focus:ring-2 focus:ring-citi">
+            <button onclick="App.loadCatalog()" class="px-3 py-2 btn-ink text-xs rounded transition-colors">Load</button>
+          </div>
+          <p id="catalog-status" class="text-xs mt-1 hidden"></p>
+        </div>
+
+        <!-- Step 2: Provider -->
+        <div id="step2" class="bg-white rounded-lg border border-gray-200 p-3 hidden fade-in">
+          <label class="text-xs font-semibold text-gray-500 block mb-2">2. Provider</label>
+          <div class="grid grid-cols-2 gap-2" id="provider-grid"></div>
+        </div>
+
+        <!-- Step 3: API Service -->
+        <div id="step3" class="bg-white rounded-lg border border-gray-200 p-3 hidden fade-in">
+          <label class="text-xs font-semibold text-gray-500 block mb-2">3. API Service</label>
+          <div class="space-y-1 max-h-52 overflow-y-auto" id="product-list"></div>
+        </div>
+
+        <!-- Step 4: Endpoint -->
+        <div id="step4" class="bg-white rounded-lg border border-gray-200 p-3 hidden fade-in">
+          <label class="text-xs font-semibold text-gray-500 block mb-2">4. Endpoint</label>
+          <div class="space-y-1 max-h-52 overflow-y-auto" id="endpoint-list"></div>
+        </div>
+
+        <!-- Step 5: Field Mapping -->
+        <div id="step5" class="bg-white rounded-lg border border-gray-200 p-3 hidden fade-in">
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs font-semibold text-gray-500">5. Fields → Postgres Mapping</label>
+            <label class="flex items-center gap-1 text-xs cursor-pointer select-none">
+              <input type="checkbox" id="select-all-fields" class="rounded accent-citi" checked onchange="App.toggleAllFields(this.checked)">
+              <span class="text-gray-500">All</span>
+            </label>
+          </div>
+          <div class="text-xs text-gray-400 font-mono mb-2">API sample response</div>
+          <div class="rounded p-2 mb-3 overflow-x-auto max-h-28" style="background:#0F1632">
+            <pre class="text-xs leading-relaxed" style="color:#4ade80" id="json-schema"></pre>
+          </div>
+          <div id="mapping-list" class="space-y-1 max-h-56 overflow-y-auto"></div>
+        </div>
+
+        <!-- Step 6: Table Name + Add -->
+        <div id="step6" class="rounded-lg border-2 p-3 hidden fade-in space-y-2" style="background:#eef2ff;border-color:#255BE3">
+          <div>
+            <label class="text-xs font-semibold text-gray-500 block mb-1">Postgres Table Name</label>
+            <input type="text" id="table-name-input"
+              class="w-full px-3 py-2 border rounded text-sm font-mono focus:outline-none focus:ring-2 focus:ring-citi">
+            <p id="table-name-warning" class="text-xs mt-1 hidden" style="color:#FF3C28">Table name already exists — will be suffixed.</p>
+          </div>
+          <button onclick="App.addToBundle()" class="w-full px-4 py-2.5 btn-citi text-sm font-bold rounded-lg transition-colors">
+            Add to Bundle →
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Right: Bundle (58%) -->
+    <div class="w-[58%] flex flex-col min-h-0 panel-bg text-white">
+
+      <!-- Bundle Header -->
+      <div class="p-4 flex-shrink-0" style="border-bottom:1px solid #1e2d5a">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h2 class="font-bold text-base tracking-tight">Data Bundle</h2>
+            <p class="text-xs panel-muted mt-0.5">One bundle · multiple Postgres tables · deployed together</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="bundle-table-count" class="text-xs panel-muted"></span>
+            <button onclick="App.deployBundle()" id="deploy-btn"
+              class="px-4 py-1.5 rounded text-xs font-bold transition-colors opacity-50 cursor-not-allowed"
+              style="background:#255BE3;color:#fff" disabled>
+              Deploy Bundle
+            </button>
+          </div>
+        </div>
+        <!-- Bundle name -->
+        <div class="flex gap-2 items-center">
+          <input type="text" id="bundle-name" placeholder="Name your bundle  e.g. regime_model"
+            class="flex-1 px-3 py-1.5 rounded text-sm font-mono focus:outline-none focus:ring-2 focus:ring-citi"
+            style="background:#162044;border:1px solid #1e2d5a;color:#fff"
+            oninput="App.onBundleNameChange()">
+          <span class="text-xs panel-muted">·</span>
+          <input type="text" id="bundle-desc" placeholder="Description (optional)"
+            class="flex-1 px-3 py-1.5 rounded text-sm focus:outline-none focus:ring-2 focus:ring-citi"
+            style="background:#162044;border:1px solid #1e2d5a;color:#fff">
+        </div>
+      </div>
+
+      <!-- Bundle Tables List -->
+      <div class="flex-1 p-3 overflow-y-auto space-y-2 min-h-0" id="bundle-tables">
+        <div class="text-center py-16 text-sm" style="color:#8896b8">
+          No tables in bundle yet<br>
+          <span class="text-xs opacity-60">Select an endpoint on the left and click "Add to Bundle"</span>
+        </div>
+      </div>
+
+      <!-- Logs Panel -->
+      <div id="logs-panel" class="hidden flex-shrink-0" style="border-top:1px solid #1e2d5a">
+        <div class="flex items-center justify-between px-3 py-2 cursor-pointer select-none" style="background:#162044" onclick="UI.togglePanel('logs')">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-semibold">Test Logs</span>
+            <span id="logs-badge" class="hidden px-1.5 py-0.5 rounded-full text-xs" style="background:#255BE3"></span>
+          </div>
+          <span id="logs-toggle" class="text-xs panel-muted">▼</span>
+        </div>
+        <div id="logs-content" class="hidden p-3 h-44 overflow-y-auto text-xs font-mono space-y-0.5" style="background:#060d1f"></div>
+      </div>
+
+      <!-- Preview Panel -->
+      <div id="preview-panel" class="hidden flex-shrink-0" style="border-top:1px solid #1e2d5a">
+        <div class="flex items-center justify-between px-3 py-2 cursor-pointer select-none" style="background:#162044" onclick="UI.togglePanel('preview')">
+          <span class="text-xs font-semibold">Postgres Preview</span>
+          <span id="preview-toggle" class="text-xs panel-muted">▼</span>
+        </div>
+        <div id="preview-content" class="hidden p-3 overflow-x-auto text-xs max-h-52" style="background:#060d1f"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+  const el   = id => document.getElementById(id);
+  const show = id => el(id).classList.remove('hidden');
+  const hide = id => el(id).classList.add('hidden');
+  const uid  = () => Math.random().toString(36).slice(2, 8);
+
+  function setHTML(id, html) { el(id).innerHTML = html; }
+
+  function detectType(value) {
+    if (value === null || value === undefined) return 'TEXT';
+    if (typeof value === 'boolean')  return 'BOOLEAN';
+    if (typeof value === 'number')   return Number.isInteger(value) ? 'INTEGER' : 'DECIMAL';
+    if (Array.isArray(value))        return 'ARRAY';
+    if (typeof value === 'object')   return 'JSONB';
+    if (/^\d{4}-\d{2}-\d{2}T/.test(value)) return 'TIMESTAMP';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return 'DATE';
+    return 'TEXT';
+  }
+
+  function inferSchema(obj, depth = 0) {
+    return Object.entries(obj).map(([name, val]) => {
+      const type  = detectType(val);
+      const field = { name, type };
+      if (type === 'ARRAY' && val.length > 0 && typeof val[0] === 'object') {
+        field.childFields = inferSchema(val[0], depth + 1);
+        field.pgStrategy  = 'JSONB';
+      }
+      if (type === 'JSONB' && !Array.isArray(val)) {
+        field.childFields = inferSchema(val, depth + 1);
+        field.pgStrategy  = 'JSONB';
+      }
+      return field;
+    });
+  }
+
+  function uniqueTableName(base, existing) {
+    if (!existing.includes(base)) return base;
+    let n = 2;
+    while (existing.includes(`${base}_${n}`)) n++;
+    return `${base}_${n}`;
+  }
+
+  // ─── Default Catalog ──────────────────────────────────────────────────────
+  const DEFAULT_CATALOG = {
+    Bloomberg: {
+      products: {
+        'EOD Pricing': {
+          endpoints: {
+            daily_close: { ticker: 'AAPL US', date: '2024-01-15', close: 183.50, volume: 45230000, change: 1.25, change_pct: 0.69 },
+            intraday:    { ticker: 'AAPL US', timestamp: '2024-01-15T10:30:00Z', price: 183.20, bid: 183.15, ask: 183.25, volume: 125000 }
+          }
+        },
+        Equities: {
+          endpoints: {
+            fundamentals: { ticker: 'AAPL US', name: 'Apple Inc', exchange: 'NASDAQ', market_cap: 2891000000000, pe_ratio: 29.5, sector: 'Technology' },
+            ownership:    { ticker: 'AAPL US', holders: [{ name: 'Vanguard', shares: 1280000000, pct: 7.8 }, { name: 'BlackRock', shares: 1050000000, pct: 5.9 }] }
+          }
+        }
+      }
+    },
+    FactSet: {
+      products: {
+        'Income Statements': {
+          endpoints: {
+            quarterly: { ticker: 'AAPL', period: 'Q1 2024', revenue: 119575000000, net_income: 33916000000, eps: 2.18, segments: [{ name: 'iPhone', revenue: 69702000000 }, { name: 'Services', revenue: 23117000000 }] },
+            annual:    { ticker: 'AAPL', period: 'FY 2023', revenue: 383285000000, net_income: 96995000000, eps: 6.42 }
+          }
+        },
+        'Balance Sheet': {
+          endpoints: {
+            quarterly: { ticker: 'AAPL', period: 'Q1 2024', total_assets: 353514000000, total_liabilities: 290020000000, equity: 63494000000 }
+          }
+        }
+      }
+    },
+    Haver: {
+      products: {
+        'Macro Data': {
+          endpoints: {
+            gdp: { indicator: 'GDP', country: 'US', date: '2024-01-01', value: 27961.2, change: 736.5, change_pct: 2.71, frequency: 'quarterly' },
+            cpi: { indicator: 'CPI', country: 'US', date: '2024-01-01', value: 312.5,   change: 1.2,   change_pct: 0.39, frequency: 'monthly' }
+          }
+        }
+      }
+    },
+    LSEG: {
+      products: {
+        'ESG Scores': {
+          endpoints: {
+            company:   { ticker: 'AAPL', environmental: 85, social: 78, governance: 82, total_esg: 82, rating: 'AA', year: 2023 },
+            sovereign: { country: 'United States', iso2: 'US', environmental: 72, social: 80, governance: 85, total_esg: 79, rating: 'A' }
+          }
+        },
+        Fundamentals: {
+          endpoints: {
+            income:        { ticker: 'MSFT', period: 'Q1 2024', revenue: 62020000000, gross_profit: 42570000000, operating_income: 28830000000 },
+            balance_sheet: { ticker: 'MSFT', period: 'Q1 2024', total_assets: 411976000000, total_liabilities: 198298000000, equity: 213678000000 },
+            cash_flow:     { ticker: 'MSFT', period: 'Q1 2024', operating_cf: 30380000000, investing_cf: -11800000000, financing_cf: -9100000000 }
+          }
+        }
+      }
+    }
+  };
+
+  // ─── UI helpers ───────────────────────────────────────────────────────────
+  const UI = {
+    togglePanel(name) {
+      const content = el(`${name}-content`);
+      const toggle  = el(`${name}-toggle`);
+      const open    = content.classList.toggle('hidden');
+      toggle.textContent = open ? '▼' : '▲';
+    },
+
+    selBtn(label, active, onclick) {
+      const base  = 'w-full text-left px-3 py-2 rounded border text-sm transition-colors';
+      const state = active
+        ? 'active-sel'
+        : 'border-gray-200 hover:bg-gray-50 text-gray-800';
+      return `<button class="${base} ${state}" onclick="${onclick}">${label}</button>`;
+    },
+
+    fieldTypeSelect(current) {
+      const types = ['TEXT','VARCHAR(255)','INTEGER','BIGINT','DECIMAL','TIMESTAMP','DATE','BOOLEAN','JSONB','UUID'];
+      return '<select class="px-2 py-1 border rounded text-xs bg-white text-gray-700">' +
+        types.map(t => `<option${t === current ? ' selected' : ''}>${t}</option>`).join('') +
+        '</select>';
+    },
+
+    pgStrategySelect(current = 'JSONB') {
+      return '<select class="px-2 py-1 border rounded text-xs bg-white text-gray-700">' +
+        ['JSONB','child_table','flatten'].map(s => `<option${s === current ? ' selected' : ''}>${s}</option>`).join('') +
+        '</select>';
+    }
+  };
+
+  // ─── App ──────────────────────────────────────────────────────────────────
+  const App = (() => {
+    let catalog  = null;
+    let vendor   = null;
+    let product  = null;
+    let endpoint = null;
+    let schema   = null;
+    let fieldSel = {};
+    let tables   = [];   // bundle tables (was dataSources)
+
+    // ── Catalog ──
+    function loadCatalog() {
+      catalog = DEFAULT_CATALOG;
+      const status = el('catalog-status');
+      status.textContent = `✓ Loaded ${Object.keys(catalog).length} providers`;
+      status.className = 'text-xs mt-1';
+      status.style.color = '#255BE3';
+      show('catalog-status');
+      renderProviders();
+    }
+
+    // ── Providers ──
+    function renderProviders() {
+      show('step2');
+      setHTML('provider-grid', Object.keys(catalog).map(v => {
+        const count  = Object.keys(catalog[v].products).length;
+        const active = vendor === v;
+        const base   = 'px-4 py-3 text-sm border rounded text-left transition-colors font-medium';
+        const state  = active ? 'active-sel' : 'border-gray-200 hover:bg-gray-50 text-gray-800';
+        return `<button class="${base} ${state}" onclick="App.selectVendor('${v}')">
+          <div class="font-bold">${v}</div>
+          <div class="text-xs opacity-60 mt-0.5">${count} product${count > 1 ? 's' : ''}</div>
+        </button>`;
+      }).join(''));
+    }
+
+    function selectVendor(v) {
+      vendor = v; product = null; endpoint = null;
+      renderProviders(); hideFrom(3); renderProducts();
+    }
+
+    // ── Products ──
+    function renderProducts() {
+      show('step3');
+      setHTML('product-list',
+        `<div class="mb-2 text-xs font-medium" style="color:#255BE3">${vendor}</div>` +
+        Object.entries(catalog[vendor].products).map(([p, data]) => {
+          const count = Object.keys(data.endpoints).length;
+          return UI.selBtn(
+            `<span class="font-medium">${p}</span><span class="float-right text-xs opacity-50">${count} endpoint${count > 1 ? 's' : ''}</span>`,
+            product === p, `App.selectProduct('${p}')`
+          );
+        }).join('')
+      );
+    }
+
+    function selectProduct(p) {
+      product = p; endpoint = null;
+      renderProducts(); hideFrom(4); renderEndpoints();
+    }
+
+    // ── Endpoints ──
+    function mockUrl(v, p, e) {
+      const base = v.toLowerCase().replace(/\s+/g, '') + '.com/api/v1';
+      const path = [p, e].join('/').toLowerCase().replace(/\s+/g, '_');
+      return `GET https://${base}/${path}`;
+    }
+
+    function renderEndpoints() {
+      show('step4');
+      setHTML('endpoint-list',
+        `<div class="mb-2 text-xs font-medium" style="color:#255BE3">${vendor} › ${product}</div>` +
+        Object.entries(catalog[vendor].products[product].endpoints).map(([e, record]) => {
+          const fields    = inferSchema(record);
+          const hasNested = fields.some(f => f.type === 'ARRAY' || f.type === 'JSONB');
+          const badge     = hasNested ? '<span class="ml-2 px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-xs font-medium">nested</span>' : '';
+          const url       = mockUrl(vendor, product, e);
+          const active    = endpoint === e;
+          const base      = 'w-full text-left px-3 py-2 rounded border transition-colors';
+          const state     = active ? 'active-sel' : 'border-gray-200 hover:bg-gray-50 text-gray-800';
+          return `<button class="${base} ${state}" onclick="App.selectEndpoint('${e}')">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-semibold">${e}</span>
+              <span class="flex items-center gap-1 text-xs opacity-50">${fields.length} fields${badge}</span>
+            </div>
+            <div class="mt-1 font-mono text-xs truncate" style="color:${active ? '#93c5fd' : '#9ca3af'}">${url}</div>
+          </button>`;
+        }).join('')
+      );
+    }
+
+    function selectEndpoint(ep) {
+      endpoint = ep;
+      renderEndpoints(); hideFrom(5);
+      const record = catalog[vendor].products[product].endpoints[ep];
+      schema   = inferSchema(record);
+      fieldSel = {};
+      schema.forEach(f => { fieldSel[f.name] = true; });
+      renderSchemaMapping();
+      renderTableNameInput();
+    }
+
+    // ── Schema Mapping ──
+    function renderSchemaMapping() {
+      show('step5'); show('step6');
+      const record = catalog[vendor].products[product].endpoints[endpoint];
+      el('json-schema').textContent = JSON.stringify(record, null, 2);
+      el('select-all-fields').checked = true;
+      setHTML('mapping-list', schema.map(f => renderFieldRow(f)).join(''));
+    }
+
+    function renderFieldRow(f, indent = 0) {
+      const isNested = f.type === 'ARRAY' || f.type === 'JSONB';
+      const isChild  = indent > 0;
+      const type     = f.type === 'ARRAY' ? f.pgStrategy || 'JSONB' : f.type;
+
+      const rowBg      = isChild ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-200';
+      const leftBorder = isChild ? 'border-l-amber' : '';
+      const nameCls    = isChild ? 'text-amber-700' : 'text-gray-700';
+      const indentPx   = indent > 0 ? `style="margin-left:${indent * 20}px"` : '';
+      const prefix     = isChild && indent === 1
+        ? `<span class="shrink-0 px-1.5 py-0.5 bg-amber-100 text-amber-600 rounded text-xs font-bold leading-none">[]</span>`
+        : indent > 1
+        ? `<span class="shrink-0 text-amber-400 text-xs">└</span>`
+        : '';
+
+      let html = `<div class="flex items-center gap-2 p-2 border rounded text-sm field-row transition-opacity ${rowBg} ${leftBorder}" data-field="${f.name}" ${indentPx}>
+        ${prefix}
+        <input type="checkbox" class="rounded field-checkbox shrink-0" data-field="${f.name}" checked onchange="App.onFieldToggle(this)">
+        <span class="font-mono ${nameCls} w-24 truncate text-xs shrink-0" title="${f.name}">${f.name}</span>
+        <span class="text-gray-300 text-xs shrink-0">→</span>
+        <input type="text" value="${f.name}" class="flex-1 min-w-0 px-2 py-1 border rounded text-xs font-mono text-gray-700">
+        ${UI.fieldTypeSelect(type)}
+        ${isNested ? UI.pgStrategySelect(f.pgStrategy) : ''}
+      </div>`;
+
+      if (isNested && f.childFields)
+        html += f.childFields.map(cf => renderFieldRow(cf, indent + 1)).join('');
+
+      return html;
+    }
+
+    function toggleAllFields(checked) {
+      schema.forEach(f => { fieldSel[f.name] = checked; });
+      document.querySelectorAll('.field-checkbox').forEach(cb => { cb.checked = checked; });
+      syncFieldOpacity();
+    }
+
+    function onFieldToggle(cb) {
+      fieldSel[cb.dataset.field] = cb.checked;
+      syncFieldOpacity();
+    }
+
+    function syncFieldOpacity() {
+      document.querySelectorAll('.field-row').forEach(row => {
+        const cb = row.querySelector('.field-checkbox');
+        row.style.opacity = cb && cb.checked ? '1' : '0.35';
+      });
+    }
+
+    // ── Table name ──
+    function suggestTableName() {
+      const base     = [vendor, product, endpoint].join('_').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+      const existing = tables.map(t => t.tableName);
+      return uniqueTableName(base, existing);
+    }
+
+    function renderTableNameInput() {
+      el('table-name-input').value = suggestTableName();
+      hide('table-name-warning');
+      el('table-name-input').oninput = () => {
+        const val      = el('table-name-input').value.trim();
+        const existing = tables.map(t => t.tableName);
+        existing.includes(val) ? show('table-name-warning') : hide('table-name-warning');
+      };
+    }
+
+    // ── Add to bundle ──
+    function addToBundle() {
+      if (!vendor || !product || !endpoint) return;
+      const existing  = tables.map(t => t.tableName);
+      const tableName = uniqueTableName(el('table-name-input').value.trim(), existing);
+
+      tables.push({
+        id: uid(), vendor, product, endpoint,
+        tableName,
+        schema: schema.filter(f => fieldSel[f.name] !== false),
+        schedule: 'daily',
+        subscribed: false,
+        record: catalog[vendor].products[product].endpoints[endpoint]
+      });
+
+      renderBundle();
+      vendor = null; product = null; endpoint = null; schema = null; fieldSel = {};
+      hideFrom(3);
+      renderProviders();
+    }
+
+    // ── Bundle name change ──
+    function onBundleNameChange() {
+      const hasName   = el('bundle-name').value.trim().length > 0;
+      const hasTable  = tables.length > 0;
+      const deployBtn = el('deploy-btn');
+      if (hasName && hasTable) {
+        deployBtn.disabled = false;
+        deployBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      } else {
+        deployBtn.disabled = true;
+        deployBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      }
+    }
+
+    // ── Render bundle ──
+    function renderBundle() {
+      const container = el('bundle-tables');
+      const count     = tables.length;
+
+      el('bundle-table-count').textContent = count ? `${count} table${count > 1 ? 's' : ''}` : '';
+      onBundleNameChange();
+
+      if (!count) {
+        container.innerHTML = `<div class="text-center py-16 text-sm" style="color:#8896b8">
+          No tables in bundle yet<br>
+          <span class="text-xs opacity-60">Select an endpoint on the left and click "Add to Bundle"</span>
+        </div>`;
+        return;
+      }
+
+      const schedules = ['hourly','daily','weekly','monthly'];
+      container.innerHTML = tables.map((t, idx) => {
+        const dot        = t.subscribed ? '#4ade80' : '#fbbf24';
+        const statusTxt  = t.subscribed ? 'Active' : 'Queued';
+        const statusBg   = t.subscribed ? 'background:#14532d;color:#86efac' : 'background:#713f12;color:#fde68a';
+        const nestedN    = t.schema.filter(f => f.type === 'ARRAY' || f.type === 'JSONB').length;
+        const nestedBadge = nestedN ? `<span class="px-1.5 py-0.5 rounded text-xs" style="background:#78350f;color:#fde68a">${nestedN} nested</span>` : '';
+
+        const scheds = schedules.map(s => {
+          const a = t.schedule === s
+            ? 'style="background:#255BE3;color:#fff"'
+            : 'style="background:#1e2d5a;color:#8896b8" onmouseenter="this.style.background=\'#253660\'" onmouseleave="this.style.background=\'#1e2d5a\'"';
+          return `<button onclick="App.setSchedule('${t.id}','${s}')" class="px-2 py-1 rounded text-xs transition-colors" ${a}>${s}</button>`;
+        }).join('');
+
+        const subBtn = t.subscribed
+          ? `<button onclick="App.toggleSubscribe('${t.id}')" class="px-3 py-1 rounded text-xs font-medium transition-colors" style="background:#166534;color:#86efac">● Running</button>`
+          : `<button onclick="App.toggleSubscribe('${t.id}')" class="px-3 py-1 rounded text-xs font-medium transition-colors" style="background:#255BE3;color:#fff">Subscribe</button>`;
+
+        return `<div class="rounded-lg p-3 fade-in panel-card">
+          <!-- table index -->
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-xs font-bold px-2 py-0.5 rounded" style="background:#1e2d5a;color:#8896b8">T${idx + 1}</span>
+            <div class="w-1.5 h-1.5 rounded-full shrink-0" style="background:${dot}"></div>
+            <span class="font-semibold text-sm text-white">${t.vendor}</span>
+            <span class="text-xs" style="color:#8896b8">›</span>
+            <span class="text-xs" style="color:#c7d2e8">${t.product}</span>
+            <span class="text-xs" style="color:#8896b8">›</span>
+            <span class="text-xs font-mono" style="color:#c7d2e8">${t.endpoint}</span>
+            <div class="ml-auto flex items-center gap-1.5">
+              ${nestedBadge}
+              <span class="px-2 py-0.5 rounded-full text-xs" style="${statusBg}">${statusTxt}</span>
+            </div>
+          </div>
+          <!-- table info -->
+          <div class="flex items-center gap-2 mb-2 text-xs">
+            <span style="color:#8896b8">Table:</span>
+            <code class="px-1.5 py-0.5 rounded font-mono text-xs" style="background:#0F1632;color:#93c5fd">${t.tableName}</code>
+            <span style="color:#8896b8">${t.schema.length} fields</span>
+            <button onclick="App.removeTable('${t.id}')" class="ml-auto px-2 py-1 rounded text-xs transition-colors" style="background:#3b0a08;color:#FF3C28" onmouseenter="this.style.background='#5c1410'" onmouseleave="this.style.background='#3b0a08'">Remove</button>
+          </div>
+          <!-- schedule + actions -->
+          <div class="flex items-center gap-1.5 flex-wrap">
+            ${scheds}
+            <div class="ml-auto flex gap-1.5">
+              ${subBtn}
+              <button onclick="App.runTest('${t.id}')" class="px-3 py-1 rounded text-xs font-medium transition-colors" style="background:#1e2d5a;color:#c7d2e8" onmouseenter="this.style.background='#255BE3';this.style.color='#fff'" onmouseleave="this.style.background='#1e2d5a';this.style.color='#c7d2e8'">▶ Test</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function setSchedule(id, s)  { mutate(id, t => t.schedule   = s);             renderBundle(); }
+    function toggleSubscribe(id) { mutate(id, t => t.subscribed = !t.subscribed); renderBundle(); }
+    function removeTable(id)     { tables = tables.filter(t => t.id !== id);      renderBundle(); }
+
+    function mutate(id, fn) {
+      const t = tables.find(t => t.id === id);
+      if (t) fn(t);
+    }
+
+    // ── Deploy bundle (mock) ──
+    function deployBundle() {
+      const name = el('bundle-name').value.trim();
+      show('logs-panel');
+      el('logs-content').classList.remove('hidden');
+      el('logs-toggle').textContent = '▲';
+      setHTML('logs-content', '');
+
+      const steps = [
+        [0,    'info',    `Deploying bundle: ${name}`],
+        [300,  'info',    `${tables.length} table${tables.length > 1 ? 's' : ''} queued`],
+        ...tables.flatMap((t, i) => [
+          [600 + i * 600,  'info',    `[${t.tableName}] Connecting to ${t.vendor}...`],
+          [900 + i * 600,  'success', `[${t.tableName}] Schema OK — ${t.schema.length} fields`],
+          [1100 + i * 600, 'success', `[${t.tableName}] CREATE TABLE IF NOT EXISTS ${t.tableName}`],
+        ]),
+        [600 + tables.length * 600 + 200, 'success', `✓ Bundle "${name}" deployed successfully`]
+      ];
+
+      steps.forEach(([delay, type, msg]) => {
+        setTimeout(() => addLog(type, msg), delay);
+      });
+    }
+
+    // ── Test single table ──
+    function runTest(id) {
+      const t = tables.find(t => t.id === id);
+      show('logs-panel');
+      el('logs-content').classList.remove('hidden');
+      el('logs-toggle').textContent = '▲';
+      setHTML('logs-content', '');
+
+      const steps = [
+        [0,    'info',    `Testing table: ${t.tableName}`],
+        [300,  'info',    `Connecting to ${t.vendor} › ${t.product} › ${t.endpoint}`],
+        [700,  'success', `Auth OK`],
+        [1100, 'success', `Fetched sample record`],
+        [1500, 'success', `Schema validated — ${t.schema.length} fields`],
+        [1900, 'success', `INSERT OK → ${t.tableName}`],
+        [2100, null,      null, () => showPreview(t)],
+        [2300, 'success', `✓ Test passed`]
+      ];
+
+      steps.forEach(([delay, type, msg, cb]) => {
+        setTimeout(() => { if (cb) cb(); else addLog(type, msg); }, delay);
+      });
+    }
+
+    function addLog(type, msg) {
+      const cls  = { success: 'log-success', error: 'log-error', info: 'log-info', warn: 'log-warn' }[type] || '';
+      const time = new Date().toLocaleTimeString();
+      const line = document.createElement('div');
+      line.className = cls;
+      line.textContent = `[${time}] ${msg}`;
+      el('logs-content').appendChild(line);
+      el('logs-content').scrollTop = el('logs-content').scrollHeight;
+    }
+
+    function showPreview(t) {
+      show('preview-panel');
+      el('preview-content').classList.remove('hidden');
+      el('preview-toggle').textContent = '▲';
+
+      const flat   = flattenSchema(t.schema);
+      const record = t.record;
+
+      const thead = flat.map(f =>
+        `<th class="px-2 py-1 text-left whitespace-nowrap font-medium text-xs" style="border:1px solid #1e2d5a;color:#8896b8">${f.path}</th>`
+      ).join('');
+
+      const tbody = `<tr>${flat.map(f => {
+        const val  = resolvePath(record, f.path);
+        const disp = typeof val === 'object' ? JSON.stringify(val) : (val !== undefined ? val : 'NULL');
+        return `<td class="px-2 py-1 whitespace-nowrap max-w-xs truncate text-xs" style="border:1px solid #1e2d5a;color:#c7d2e8" title="${disp}">${disp}</td>`;
+      }).join('')}</tr>`;
+
+      el('preview-content').innerHTML =
+        `<p class="text-xs mb-2" style="color:#8896b8">Table: <code style="color:#93c5fd">${t.tableName}</code> — sample row</p>
+        <div class="overflow-x-auto"><table class="text-xs border-collapse">
+          <thead><tr style="background:#162044">${thead}</tr></thead>
+          <tbody>${tbody}</tbody>
+        </table></div>`;
+    }
+
+    function flattenSchema(fields, prefix = '') {
+      const out = [];
+      fields.forEach(f => {
+        const path = prefix ? `${prefix}.${f.name}` : f.name;
+        if ((f.type === 'ARRAY' || f.type === 'JSONB') && f.childFields)
+          out.push(...flattenSchema(f.childFields, path));
+        else
+          out.push({ path, type: f.type });
+      });
+      return out;
+    }
+
+    function resolvePath(obj, path) {
+      return path.split('.').reduce((o, k) => {
+        if (o === null || o === undefined) return undefined;
+        return Array.isArray(o) ? o[0]?.[k] : o[k];
+      }, obj);
+    }
+
+    function hideFrom(step) {
+      for (let i = step; i <= 6; i++) hide('step' + i);
+    }
+
+    function reset() {
+      vendor = null; product = null; endpoint = null; schema = null; fieldSel = {};
+      hide('catalog-status');
+      hideFrom(2);
+      if (catalog) renderProviders();
+    }
+
+    return {
+      init()          { loadCatalog(); },
+      loadCatalog, reset,
+      selectVendor, selectProduct, selectEndpoint,
+      toggleAllFields, onFieldToggle,
+      addToBundle, onBundleNameChange,
+      setSchedule, toggleSubscribe, removeTable,
+      deployBundle, runTest
+    };
+  })();
+  </script>
+</body>
+</html>

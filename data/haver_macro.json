@@ -1,0 +1,48 @@
+{
+  "metadata": {
+    "vendor": "Haver",
+    "api": "DLX API",
+    "product": "Global Macro Indicators",
+    "version": "1.0"
+  },
+  "data": [
+    {
+      "series_code": "USAGDP",
+      "series_name": "US Real GDP",
+      "country": "United States",
+      "date": "2023-10-01",
+      "value": 21456.7,
+      "frequency": "Q",
+      "units": "Billions USD",
+      "source": "BEA",
+      "revisions": [
+        { "revised_date": "2023-12-01", "previous_value": 21384.2, "new_value": 21456.7 },
+        { "revised_date": "2024-02-01", "previous_value": 21456.7, "new_value": 21489.3 }
+      ]
+    },
+    {
+      "series_code": "USCPI",
+      "series_name": "US CPI YoY",
+      "country": "United States",
+      "date": "2023-12-01",
+      "value": 3.4,
+      "frequency": "M",
+      "units": "Percentage",
+      "source": "BLS",
+      "revisions": []
+    },
+    {
+      "series_code": "EUCPI",
+      "series_name": "Euro Area CPI YoY",
+      "country": "Euro Area",
+      "date": "2023-12-01",
+      "value": 2.9,
+      "frequency": "M",
+      "units": "Percentage",
+      "source": "Eurostat",
+      "revisions": [
+        { "revised_date": "2024-01-15", "previous_value": 2.8, "new_value": 2.9 }
+      ]
+    }
+  ]
+}
