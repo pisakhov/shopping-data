@@ -667,7 +667,17 @@
       steps.forEach(([delay, type, msg]) => {
         setTimeout(() => addLog(type, msg), delay);
       });
-      setTimeout(() => Market.add(snapshot), 600 + tables.length * 600 + 400);
+      const finalDelay = 600 + tables.length * 600 + 400;
+      setTimeout(() => {
+        Market.add(snapshot);
+        tables = [];
+        el('bundle-name').value = '';
+        el('bundle-desc').value = '';
+        hide('logs-panel');
+        hide('preview-panel');
+        setMiddlePanel(false);
+        onBundleNameChange();
+      }, finalDelay);
     }
 
     function runTest(id) {
