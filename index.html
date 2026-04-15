@@ -117,7 +117,7 @@
               <i data-lucide="store" class="w-3.5 h-3.5"></i>
               <i data-lucide="panel-right-close" id="market-toggle-icon" class="w-3 h-3"></i>
               <span id="market-toggle-badge" class="hidden absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full text-xs font-bold items-center justify-center" style="background:#255BE3;color:#fff;font-size:9px"></span>
-              <span id="market-toggle-tip" class="tooltip">Hide Marketplace</span>
+              <span id="market-toggle-tip" class="tooltip">Hide</span>
             </button>
           </div>
         </div>
@@ -826,12 +826,12 @@
         mp.classList.remove('mkt-collapsed');
         mp.classList.add('mkt-expanded', 'flex');
         icon.setAttribute('data-lucide', 'panel-right-close');
-        tip.textContent = 'Hide Marketplace';
+        tip.textContent = 'Hide';
       } else {
         mp.classList.remove('mkt-expanded');
         mp.classList.add('mkt-collapsed');
         icon.setAttribute('data-lucide', 'panel-right-open');
-        tip.textContent = 'Show Marketplace — view your deployed bundles';
+        tip.textContent = 'Show';
         setTimeout(() => { if (!marketOpen) mp.classList.remove('flex'); }, 360);
       }
       icons();
