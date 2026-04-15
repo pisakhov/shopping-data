@@ -31,18 +31,27 @@
     .fade-in { animation: fadeIn 0.15s ease-in; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
     .border-l-amber { border-left: 4px solid #f59e0b !important; }
-    .btn-citi   { background: #255BE3; color: #fff; }
+    .btn-citi       { background: #255BE3; color: #fff; }
     .btn-citi:hover { background: #1a47c4; }
-    .btn-ink    { background: #0F1632; color: #fff; }
-    .btn-ink:hover  { background: #1a2550; }
-    .active-sel { background: #255BE3 !important; color: #fff !important; border-color: #255BE3 !important; }
-    .panel-bg   { background: #0F1632; }
-    .panel-border { border-color: #1e2d5a; }
-    .panel-card { background: #162044; border: 1px solid #1e2d5a; }
+    .active-sel     { background: #255BE3 !important; color: #fff !important; border-color: #255BE3 !important; }
+    .panel-bg    { background: #0F1632; }
+    .panel-card  { background: #162044; border: 1px solid #1e2d5a; }
     .panel-muted { color: #8896b8; }
+    /* hover utility classes replacing inline onmouseenter */
+    .btn-dark       { background: #1e2d5a; color: #c7d2e8; }
+    .btn-dark:hover { background: #255BE3; color: #fff; }
+    .btn-sched       { background: #1e2d5a; color: #8896b8; }
+    .btn-sched:hover { background: #253660; color: #fff; }
+    .btn-sched.active { background: #255BE3; color: #fff; }
+    .btn-danger       { background: #3b0a08; color: #FF3C28; }
+    .btn-danger:hover { background: #5c1410; color: #FF3C28; }
+    .btn-green       { background: #166534; color: #86efac; }
+    .btn-green:hover { background: #14532d; color: #86efac; }
+    .mkt-edit        { background: #1e2d5a; color: #c7d2e8; }
+    .mkt-edit:hover  { background: #255BE3; color: #fff; }
   </style>
 </head>
-<body class="h-screen overflow-hidden" onload="App.init()">
+<body class="h-screen overflow-hidden">
 
   <div class="h-full flex">
 
@@ -55,35 +64,35 @@
             <i data-lucide="database" class="w-4 h-4 text-citi"></i>
             <h1 class="text-lg font-bold tracking-tight text-ink">API → Postgres</h1>
           </div>
-          <button onclick="App.reset()" class="flex items-center gap-1 text-xs text-gray-400 hover:text-ink transition-colors">
+          <button id="btn-reset" class="flex items-center gap-1 text-xs text-gray-400 hover:text-ink transition-colors">
             <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Reset
           </button>
         </div>
 
         <!-- Step 1: Provider -->
-        <div id="step2" class="bg-white rounded-lg border border-gray-200 p-3 hidden fade-in">
+        <div id="step1" class="bg-white rounded-lg border border-gray-200 p-3 hidden fade-in">
           <label class="text-xs font-semibold text-gray-500 block mb-2">1. Provider</label>
           <div class="grid grid-cols-2 gap-2" id="provider-grid"></div>
         </div>
 
         <!-- Step 2: API Service -->
-        <div id="step3" class="bg-white rounded-lg border border-gray-200 p-3 hidden fade-in">
+        <div id="step2" class="bg-white rounded-lg border border-gray-200 p-3 hidden fade-in">
           <label class="text-xs font-semibold text-gray-500 block mb-2">2. API Service</label>
           <div class="space-y-1 max-h-52 overflow-y-auto" id="product-list"></div>
         </div>
 
-        <!-- Step 4: Endpoint -->
-        <div id="step4" class="bg-white rounded-lg border border-gray-200 p-3 hidden fade-in">
+        <!-- Step 3: Endpoint -->
+        <div id="step3" class="bg-white rounded-lg border border-gray-200 p-3 hidden fade-in">
           <label class="text-xs font-semibold text-gray-500 block mb-2">3. Endpoint</label>
           <div class="space-y-1 max-h-52 overflow-y-auto" id="endpoint-list"></div>
         </div>
 
-        <!-- Step 5: Field Mapping -->
-        <div id="step5" class="bg-white rounded-lg border border-gray-200 p-3 hidden fade-in">
+        <!-- Step 4: Field Mapping -->
+        <div id="step4" class="bg-white rounded-lg border border-gray-200 p-3 hidden fade-in">
           <div class="flex items-center justify-between mb-1">
             <label class="text-xs font-semibold text-gray-500">4. Fields → Postgres Mapping</label>
             <label class="flex items-center gap-1 text-xs cursor-pointer select-none">
-              <input type="checkbox" id="select-all-fields" class="rounded accent-citi" checked onchange="App.toggleAllFields(this.checked)">
+              <input type="checkbox" id="select-all-fields" class="rounded accent-citi" checked>
               <span class="text-gray-500">All</span>
             </label>
           </div>
@@ -95,14 +104,14 @@
         </div>
 
         <!-- Step 5: Table Name + Add -->
-        <div id="step6" class="rounded-lg border-2 p-3 hidden fade-in space-y-2" style="background:#eef2ff;border-color:#255BE3">
+        <div id="step5" class="rounded-lg border-2 p-3 hidden fade-in space-y-2" style="background:#eef2ff;border-color:#255BE3">
           <div>
             <label class="text-xs font-semibold text-gray-500 block mb-1">Postgres Table Name</label>
             <input type="text" id="table-name-input"
               class="w-full px-3 py-2 border rounded text-sm font-mono focus:outline-none focus:ring-2 focus:ring-citi">
             <p id="table-name-warning" class="text-xs mt-1 hidden" style="color:#FF3C28">Table name already exists — will be suffixed.</p>
           </div>
-          <button onclick="App.addToBundle()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 btn-citi text-sm font-bold rounded-lg transition-colors">
+          <button id="btn-add-bundle" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 btn-citi text-sm font-bold rounded-lg transition-colors">
             <i data-lucide="plus-circle" class="w-4 h-4"></i> Add to Bundle
           </button>
         </div>
@@ -122,19 +131,17 @@
           </div>
           <div class="flex items-center gap-2">
             <span id="bundle-table-count" class="text-xs panel-muted"></span>
-            <button onclick="App.deployBundle()" id="deploy-btn"
+            <button id="deploy-btn"
               class="flex items-center gap-1.5 px-4 py-1.5 rounded text-xs font-bold transition-colors opacity-50 cursor-not-allowed"
               style="background:#255BE3;color:#fff" disabled>
               <i data-lucide="rocket" class="w-3 h-3"></i> Deploy Bundle
             </button>
           </div>
         </div>
-        <!-- Bundle name -->
         <div class="flex gap-2 items-center">
           <input type="text" id="bundle-name" placeholder="Name your bundle  e.g. regime_model"
             class="flex-1 px-3 py-1.5 rounded text-sm font-mono focus:outline-none focus:ring-2 focus:ring-citi"
-            style="background:#162044;border:1px solid #1e2d5a;color:#fff"
-            oninput="App.onBundleNameChange()">
+            style="background:#162044;border:1px solid #1e2d5a;color:#fff">
           <span class="text-xs panel-muted">·</span>
           <input type="text" id="bundle-desc" placeholder="Description (optional)"
             class="flex-1 px-3 py-1.5 rounded text-sm focus:outline-none focus:ring-2 focus:ring-citi"
@@ -152,7 +159,7 @@
 
       <!-- Logs Panel -->
       <div id="logs-panel" class="hidden flex-shrink-0" style="border-top:1px solid #1e2d5a">
-        <div class="flex items-center justify-between px-3 py-2 cursor-pointer select-none" style="background:#162044" onclick="UI.togglePanel('logs')">
+        <div id="logs-header" class="flex items-center justify-between px-3 py-2 cursor-pointer select-none" style="background:#162044">
           <div class="flex items-center gap-2">
             <i data-lucide="terminal" class="w-3 h-3 panel-muted"></i>
             <span class="text-xs font-semibold">Test Logs</span>
@@ -165,7 +172,7 @@
 
       <!-- Preview Panel -->
       <div id="preview-panel" class="hidden flex-shrink-0" style="border-top:1px solid #1e2d5a">
-        <div class="flex items-center justify-between px-3 py-2 cursor-pointer select-none" style="background:#162044" onclick="UI.togglePanel('preview')">
+        <div id="preview-header" class="flex items-center justify-between px-3 py-2 cursor-pointer select-none" style="background:#162044">
           <div class="flex items-center gap-2">
             <i data-lucide="table-2" class="w-3 h-3 panel-muted"></i>
             <span class="text-xs font-semibold">Postgres Preview</span>
@@ -179,21 +186,17 @@
 
     <!-- Right: Marketplace -->
     <div id="panel-marketplace" class="flex flex-col min-h-0 border-l flex-shrink-0" style="width:340px;border-color:#1e2d5a;background:#f4f5f8">
-      <!-- Header -->
       <div class="flex items-center gap-2 px-4 py-3 bg-white border-b border-gray-200 flex-shrink-0">
         <i data-lucide="store" class="w-4 h-4 text-citi"></i>
         <h2 class="font-bold text-base tracking-tight text-ink">Marketplace</h2>
       </div>
-      <!-- Search -->
       <div class="px-3 py-2 bg-white border-b border-gray-100 flex-shrink-0">
         <div class="flex items-center gap-2 px-2 py-1.5 rounded border border-gray-200 bg-gray-50">
           <i data-lucide="search" class="w-3 h-3 text-gray-400 shrink-0"></i>
           <input id="market-search" type="text" placeholder="Search tables or columns…"
-            class="flex-1 bg-transparent text-xs outline-none text-gray-700 placeholder-gray-400"
-            oninput="Market.search(this.value)">
+            class="flex-1 bg-transparent text-xs outline-none text-gray-700 placeholder-gray-400">
         </div>
       </div>
-      <!-- Bundle list -->
       <div id="market-list" class="flex-1 p-3 overflow-y-auto space-y-3 min-h-0"></div>
     </div>
 
@@ -207,6 +210,7 @@
   const uid  = () => Math.random().toString(36).slice(2, 8);
 
   function setHTML(id, html) { el(id).innerHTML = html; }
+  function icons() { lucide.createIcons(); }
 
   function detectType(value) {
     if (value === null || value === undefined) return 'TEXT';
@@ -311,15 +315,13 @@
       const toggle  = el(`${name}-toggle`);
       const open    = content.classList.toggle('hidden');
       toggle.setAttribute('data-lucide', open ? 'chevron-down' : 'chevron-up');
-      lucide.createIcons();
+      icons();
     },
 
-    selBtn(label, active, onclick) {
+    selBtn(label, active, data) {
       const base  = 'w-full text-left px-3 py-2 rounded border text-sm transition-colors';
-      const state = active
-        ? 'active-sel'
-        : 'border-gray-200 hover:bg-gray-50 text-gray-800';
-      return `<button class="${base} ${state}" onclick="${onclick}">${label}</button>`;
+      const state = active ? 'active-sel' : 'border-gray-200 hover:bg-gray-50 text-gray-800';
+      return `<button class="${base} ${state}" ${data}>${label}</button>`;
     },
 
     fieldTypeSelect(current) {
@@ -344,24 +346,22 @@
     let endpoint = null;
     let schema   = null;
     let fieldSel = {};
-    let tables   = [];   // bundle tables (was dataSources)
+    let tables   = [];
 
-    // ── Catalog ──
     function loadCatalog() {
       catalog = DEFAULT_CATALOG;
       renderProviders();
-      lucide.createIcons();
+      icons();
     }
 
-    // ── Providers ──
     function renderProviders() {
-      show('step2');
+      show('step1');
       setHTML('provider-grid', Object.keys(catalog).map(v => {
         const count  = Object.keys(catalog[v].products).length;
         const active = vendor === v;
         const base   = 'px-4 py-3 text-sm border rounded text-left transition-colors font-medium';
         const state  = active ? 'active-sel' : 'border-gray-200 hover:bg-gray-50 text-gray-800';
-        return `<button class="${base} ${state}" onclick="App.selectVendor('${v}')">
+        return `<button class="${base} ${state}" data-action="select-vendor" data-vendor="${v}">
           <div class="font-bold">${v}</div>
           <div class="text-xs opacity-60 mt-0.5">${count} product${count > 1 ? 's' : ''}</div>
         </button>`;
@@ -370,19 +370,19 @@
 
     function selectVendor(v) {
       vendor = v; product = null; endpoint = null;
-      renderProviders(); hideFrom(3); renderProducts();
+      renderProviders(); hideFrom(2); renderProducts();
     }
 
-    // ── Products ──
     function renderProducts() {
-      show('step3');
+      show('step2');
       setHTML('product-list',
         `<div class="mb-2 text-xs font-medium" style="color:#255BE3">${vendor}</div>` +
         Object.entries(catalog[vendor].products).map(([p, data]) => {
           const count = Object.keys(data.endpoints).length;
           return UI.selBtn(
             `<span class="font-medium">${p}</span><span class="float-right text-xs opacity-50">${count} endpoint${count > 1 ? 's' : ''}</span>`,
-            product === p, `App.selectProduct('${p}')`
+            product === p,
+            `data-action="select-product" data-product="${p}"`
           );
         }).join('')
       );
@@ -390,10 +390,9 @@
 
     function selectProduct(p) {
       product = p; endpoint = null;
-      renderProducts(); hideFrom(4); renderEndpoints();
+      renderProducts(); hideFrom(3); renderEndpoints();
     }
 
-    // ── Endpoints ──
     function mockUrl(v, p, e) {
       const base = v.toLowerCase().replace(/\s+/g, '') + '.com/api/v1';
       const path = [p, e].join('/').toLowerCase().replace(/\s+/g, '_');
@@ -401,7 +400,7 @@
     }
 
     function renderEndpoints() {
-      show('step4');
+      show('step3');
       setHTML('endpoint-list',
         `<div class="mb-2 text-xs font-medium" style="color:#255BE3">${vendor} › ${product}</div>` +
         Object.entries(catalog[vendor].products[product].endpoints).map(([e, record]) => {
@@ -412,7 +411,7 @@
           const active    = endpoint === e;
           const base      = 'w-full text-left px-3 py-2 rounded border transition-colors';
           const state     = active ? 'active-sel' : 'border-gray-200 hover:bg-gray-50 text-gray-800';
-          return `<button class="${base} ${state}" onclick="App.selectEndpoint('${e}')">
+          return `<button class="${base} ${state}" data-action="select-endpoint" data-endpoint="${e}">
             <div class="flex items-center justify-between">
               <span class="font-mono text-xs font-semibold">${e}</span>
               <span class="flex items-center gap-1 text-xs opacity-50">${fields.length} fields${badge}</span>
@@ -425,7 +424,7 @@
 
     function selectEndpoint(ep) {
       endpoint = ep;
-      renderEndpoints(); hideFrom(5);
+      renderEndpoints(); hideFrom(4);
       const record = catalog[vendor].products[product].endpoints[ep];
       schema   = inferSchema(record);
       fieldSel = {};
@@ -434,9 +433,8 @@
       renderTableNameInput();
     }
 
-    // ── Schema Mapping ──
     function renderSchemaMapping() {
-      show('step5'); show('step6');
+      show('step4'); show('step5');
       const record = catalog[vendor].products[product].endpoints[endpoint];
       el('json-schema').textContent = JSON.stringify(record, null, 2);
       el('select-all-fields').checked = true;
@@ -460,7 +458,7 @@
 
       let html = `<div class="flex items-center gap-2 p-2 border rounded text-sm field-row transition-opacity ${rowBg} ${leftBorder}" data-field="${f.name}" ${indentPx}>
         ${prefix}
-        <input type="checkbox" class="rounded field-checkbox shrink-0" data-field="${f.name}" checked onchange="App.onFieldToggle(this)">
+        <input type="checkbox" class="rounded field-checkbox shrink-0" data-field="${f.name}" checked>
         <span class="font-mono ${nameCls} w-24 truncate text-xs shrink-0" title="${f.name}">${f.name}</span>
         <span class="text-gray-300 text-xs shrink-0">→</span>
         <input type="text" value="${f.name}" class="flex-1 min-w-0 px-2 py-1 border rounded text-xs font-mono text-gray-700">
@@ -492,7 +490,6 @@
       });
     }
 
-    // ── Table name ──
     function suggestTableName() {
       const base     = [vendor, product, endpoint].join('_').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
       const existing = tables.map(t => t.tableName);
@@ -502,14 +499,8 @@
     function renderTableNameInput() {
       el('table-name-input').value = suggestTableName();
       hide('table-name-warning');
-      el('table-name-input').oninput = () => {
-        const val      = el('table-name-input').value.trim();
-        const existing = tables.map(t => t.tableName);
-        existing.includes(val) ? show('table-name-warning') : hide('table-name-warning');
-      };
     }
 
-    // ── Add to bundle ──
     function addToBundle() {
       if (!vendor || !product || !endpoint) return;
       const existing  = tables.map(t => t.tableName);
@@ -526,11 +517,10 @@
 
       renderBundle();
       vendor = null; product = null; endpoint = null; schema = null; fieldSel = {};
-      hideFrom(3);
+      hideFrom(2);
       renderProviders();
     }
 
-    // ── Bundle name change ──
     function onBundleNameChange() {
       const hasName   = el('bundle-name').value.trim().length > 0;
       const hasTable  = tables.length > 0;
@@ -544,7 +534,6 @@
       }
     }
 
-    // ── Render bundle ──
     function renderBundle() {
       const container = el('bundle-tables');
       const count     = tables.length;
@@ -558,31 +547,28 @@
           No tables in bundle yet<br>
           <span class="text-xs opacity-60">Select an endpoint on the left and click "Add to Bundle"</span>
         </div>`;
-        lucide.createIcons();
+        icons();
         return;
       }
 
       const schedules = ['hourly','daily','weekly','monthly'];
       container.innerHTML = tables.map((t, idx) => {
-        const dot        = t.subscribed ? '#4ade80' : '#fbbf24';
-        const statusTxt  = t.subscribed ? 'Active' : 'Queued';
-        const statusBg   = t.subscribed ? 'background:#14532d;color:#86efac' : 'background:#713f12;color:#fde68a';
-        const nestedN    = t.schema.filter(f => f.type === 'ARRAY' || f.type === 'JSONB').length;
+        const dot         = t.subscribed ? '#4ade80' : '#fbbf24';
+        const statusTxt   = t.subscribed ? 'Active' : 'Queued';
+        const statusBg    = t.subscribed ? 'background:#14532d;color:#86efac' : 'background:#713f12;color:#fde68a';
+        const nestedN     = t.schema.filter(f => f.type === 'ARRAY' || f.type === 'JSONB').length;
         const nestedBadge = nestedN ? `<span class="px-1.5 py-0.5 rounded text-xs" style="background:#78350f;color:#fde68a">${nestedN} nested</span>` : '';
 
-        const scheds = schedules.map(s => {
-          const a = t.schedule === s
-            ? 'style="background:#255BE3;color:#fff"'
-            : 'style="background:#1e2d5a;color:#8896b8" onmouseenter="this.style.background=\'#253660\'" onmouseleave="this.style.background=\'#1e2d5a\'"';
-          return `<button onclick="App.setSchedule('${t.id}','${s}')" class="px-2 py-1 rounded text-xs transition-colors" ${a}>${s}</button>`;
-        }).join('');
+        const scheds = schedules.map(s =>
+          `<button class="px-2 py-1 rounded text-xs transition-colors btn-sched${t.schedule === s ? ' active' : ''}"
+            data-action="set-schedule" data-id="${t.id}" data-schedule="${s}">${s}</button>`
+        ).join('');
 
         const subBtn = t.subscribed
-          ? `<button onclick="App.toggleSubscribe('${t.id}')" class="flex items-center gap-1 px-3 py-1 rounded text-xs font-medium transition-colors" style="background:#166534;color:#86efac"><i data-lucide="circle-check" class="w-3 h-3"></i> Running</button>`
-          : `<button onclick="App.toggleSubscribe('${t.id}')" class="flex items-center gap-1 px-3 py-1 rounded text-xs font-medium transition-colors" style="background:#255BE3;color:#fff"><i data-lucide="zap" class="w-3 h-3"></i> Subscribe</button>`;
+          ? `<button class="flex items-center gap-1 px-3 py-1 rounded text-xs font-medium transition-colors btn-green" data-action="toggle-subscribe" data-id="${t.id}"><i data-lucide="circle-check" class="w-3 h-3"></i> Running</button>`
+          : `<button class="flex items-center gap-1 px-3 py-1 rounded text-xs font-medium transition-colors btn-citi" data-action="toggle-subscribe" data-id="${t.id}"><i data-lucide="zap" class="w-3 h-3"></i> Subscribe</button>`;
 
         return `<div class="rounded-lg p-3 fade-in panel-card">
-          <!-- table index -->
           <div class="flex items-center gap-2 mb-2">
             <span class="text-xs font-bold px-2 py-0.5 rounded" style="background:#1e2d5a;color:#8896b8">T${idx + 1}</span>
             <div class="w-1.5 h-1.5 rounded-full shrink-0" style="background:${dot}"></div>
@@ -596,24 +582,24 @@
               <span class="px-2 py-0.5 rounded-full text-xs" style="${statusBg}">${statusTxt}</span>
             </div>
           </div>
-          <!-- table info -->
           <div class="flex items-center gap-2 mb-2 text-xs">
             <span style="color:#8896b8">Table:</span>
             <code class="px-1.5 py-0.5 rounded font-mono text-xs" style="background:#0F1632;color:#93c5fd">${t.tableName}</code>
             <span style="color:#8896b8">${t.schema.length} fields</span>
-            <button onclick="App.removeTable('${t.id}')" class="ml-auto flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors" style="background:#3b0a08;color:#FF3C28" onmouseenter="this.style.background='#5c1410'" onmouseleave="this.style.background='#3b0a08'"><i data-lucide="trash-2" class="w-3 h-3"></i> Remove</button>
+            <button class="ml-auto flex items-center gap-1 px-2 py-1 rounded text-xs btn-danger transition-colors"
+              data-action="remove-table" data-id="${t.id}"><i data-lucide="trash-2" class="w-3 h-3"></i> Remove</button>
           </div>
-          <!-- schedule + actions -->
           <div class="flex items-center gap-1.5 flex-wrap">
             ${scheds}
             <div class="ml-auto flex gap-1.5">
               ${subBtn}
-              <button onclick="App.runTest('${t.id}')" class="flex items-center gap-1 px-3 py-1 rounded text-xs font-medium transition-colors" style="background:#1e2d5a;color:#c7d2e8" onmouseenter="this.style.background='#255BE3';this.style.color='#fff'" onmouseleave="this.style.background='#1e2d5a';this.style.color='#c7d2e8'"><i data-lucide="play" class="w-3 h-3"></i> Test</button>
+              <button class="flex items-center gap-1 px-3 py-1 rounded text-xs font-medium transition-colors btn-dark"
+                data-action="run-test" data-id="${t.id}"><i data-lucide="play" class="w-3 h-3"></i> Test</button>
             </div>
           </div>
         </div>`;
-        }).join('');
-      lucide.createIcons();
+      }).join('');
+      icons();
     }
 
     function setSchedule(id, s)  { mutate(id, t => t.schedule   = s);             renderBundle(); }
@@ -625,13 +611,12 @@
       if (t) fn(t);
     }
 
-    // ── Deploy bundle (mock) ──
     function deployBundle() {
       const name = el('bundle-name').value.trim();
       show('logs-panel');
       el('logs-content').classList.remove('hidden');
       el('logs-toggle').setAttribute('data-lucide', 'chevron-up');
-      lucide.createIcons();
+      icons();
       setHTML('logs-content', '');
 
       const steps = [
@@ -645,7 +630,7 @@
         [600 + tables.length * 600 + 200, 'success', `✓ Bundle "${name}" deployed successfully`]
       ];
 
-      const desc = el('bundle-desc').value.trim();
+      const desc     = el('bundle-desc').value.trim();
       const snapshot = { id: uid(), name, desc, tables: JSON.parse(JSON.stringify(tables)), deployedAt: new Date() };
 
       steps.forEach(([delay, type, msg]) => {
@@ -654,13 +639,12 @@
       setTimeout(() => Market.add(snapshot), 600 + tables.length * 600 + 400);
     }
 
-    // ── Test single table ──
     function runTest(id) {
       const t = tables.find(t => t.id === id);
       show('logs-panel');
       el('logs-content').classList.remove('hidden');
       el('logs-toggle').setAttribute('data-lucide', 'chevron-up');
-      lucide.createIcons();
+      icons();
       setHTML('logs-content', '');
 
       const steps = [
@@ -693,7 +677,7 @@
       show('preview-panel');
       el('preview-content').classList.remove('hidden');
       el('preview-toggle').setAttribute('data-lucide', 'chevron-up');
-      lucide.createIcons();
+      icons();
 
       const flat   = flattenSchema(t.schema);
       const record = t.record;
@@ -736,12 +720,12 @@
     }
 
     function hideFrom(step) {
-      for (let i = step; i <= 6; i++) hide('step' + i);
+      for (let i = step; i <= 5; i++) hide('step' + i);
     }
 
     function reset() {
       vendor = null; product = null; endpoint = null; schema = null; fieldSel = {};
-      hideFrom(2);
+      hideFrom(1);
       if (catalog) renderProviders();
     }
 
@@ -754,14 +738,85 @@
     }
 
     return {
-      init()          { loadCatalog(); lucide.createIcons(); setTimeout(() => Market.render(), 0); },
-      loadCatalog, reset, loadBundle,
+      init() {
+        loadCatalog();
+        icons();
+        Market.render();
+        bindEvents();
+      },
+      loadBundle, reset,
       selectVendor, selectProduct, selectEndpoint,
       toggleAllFields, onFieldToggle,
       addToBundle, onBundleNameChange,
       setSchedule, toggleSubscribe, removeTable,
       deployBundle, runTest
     };
+
+    function bindEvents() {
+      // Left panel: delegated clicks
+      el('panel-left').addEventListener('click', e => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        const { action, vendor: v, product: p, endpoint: ep } = btn.dataset;
+        if (action === 'select-vendor')   selectVendor(v);
+        if (action === 'select-product')  selectProduct(p);
+        if (action === 'select-endpoint') selectEndpoint(ep);
+      });
+
+      // Middle panel: delegated clicks
+      el('panel-middle').addEventListener('click', e => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        const { action, id, schedule } = btn.dataset;
+        if (action === 'set-schedule')     setSchedule(id, schedule);
+        if (action === 'toggle-subscribe') toggleSubscribe(id);
+        if (action === 'remove-table')     removeTable(id);
+        if (action === 'run-test')         runTest(id);
+      });
+
+      // Middle panel: deploy button
+      el('deploy-btn').addEventListener('click', deployBundle);
+
+      // Middle panel: panel toggles
+      el('logs-header').addEventListener('click',    () => UI.togglePanel('logs'));
+      el('preview-header').addEventListener('click', () => UI.togglePanel('preview'));
+
+      // Left panel: reset
+      el('btn-reset').addEventListener('click', reset);
+
+      // Left panel: add to bundle
+      el('btn-add-bundle').addEventListener('click', addToBundle);
+
+      // Left panel: select all fields checkbox
+      el('select-all-fields').addEventListener('change', e => toggleAllFields(e.target.checked));
+
+      // Left panel: individual field checkboxes (delegated)
+      el('mapping-list').addEventListener('change', e => {
+        if (e.target.classList.contains('field-checkbox')) onFieldToggle(e.target);
+      });
+
+      // Left panel: table name duplicate warning
+      el('table-name-input').addEventListener('input', () => {
+        const val      = el('table-name-input').value.trim();
+        const existing = tables.map(t => t.tableName);
+        existing.includes(val) ? show('table-name-warning') : hide('table-name-warning');
+      });
+
+      // Middle panel: bundle name change
+      el('bundle-name').addEventListener('input', onBundleNameChange);
+
+      // Right panel: search
+      el('market-search').addEventListener('input', e => Market.search(e.target.value));
+
+      // Right panel: marketplace actions (delegated)
+      el('market-list').addEventListener('click', e => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        const { action, id } = btn.dataset;
+        if (action === 'market-edit')   Market.edit(id);
+        if (action === 'market-remove') Market.remove(id);
+      });
+    }
   })();
 
   // ─── Marketplace ──────────────────────────────────────────────────────────
@@ -790,7 +845,7 @@
     }
 
     function render() {
-      const q = query.trim();
+      const q       = query.trim();
       const visible = q
         ? bundles.filter(b =>
             b.tables.some(t =>
@@ -806,20 +861,20 @@
           <p class="text-sm font-medium text-gray-500">No bundles deployed yet</p>
           <p class="text-xs text-gray-400 mt-1">Build a bundle and click Deploy</p>
         </div>`);
-        lucide.createIcons();
+        icons();
         return;
       }
 
       if (!visible.length) {
         setHTML('market-list', `<div class="text-center py-10 text-xs text-gray-400">No results for "<strong>${q}</strong>"</div>`);
-        lucide.createIcons();
+        icons();
         return;
       }
 
       setHTML('market-list', visible.map(b => {
-        const ago    = timeSince(b.deployedAt);
-        const tCount = b.tables.length;
-        const vendors = [...new Set(b.tables.map(t => t.vendor))].join(', ');
+        const ago       = timeSince(b.deployedAt);
+        const tCount    = b.tables.length;
+        const vendors   = [...new Set(b.tables.map(t => t.vendor))].join(', ');
         const tableRows = b.tables.map(t => {
           const colMatch = q && t.schema.some(f => f.name.toLowerCase().includes(q));
           const cols = colMatch
@@ -850,10 +905,12 @@
               <p class="text-xs mt-0.5" style="color:#8896b8"><i data-lucide="clock" class="w-3 h-3 inline mr-1"></i>${ago}</p>
             </div>
             <div class="flex gap-1 shrink-0">
-              <button onclick="Market.edit('${b.id}')" class="flex items-center gap-1 px-2 py-1 rounded text-xs" style="background:#1e2d5a;color:#c7d2e8" onmouseenter="this.style.background='#255BE3';this.style.color='#fff'" onmouseleave="this.style.background='#1e2d5a';this.style.color='#c7d2e8'">
+              <button class="flex items-center gap-1 px-2 py-1 rounded text-xs mkt-edit transition-colors"
+                data-action="market-edit" data-id="${b.id}">
                 <i data-lucide="pencil" class="w-3 h-3"></i> Edit
               </button>
-              <button onclick="Market.remove('${b.id}')" class="flex items-center gap-1 px-2 py-1 rounded text-xs" style="background:#3b0a08;color:#FF3C28" onmouseenter="this.style.background='#5c1410'" onmouseleave="this.style.background='#3b0a08'">
+              <button class="flex items-center gap-1 px-2 py-1 rounded text-xs btn-danger transition-colors"
+                data-action="market-remove" data-id="${b.id}">
                 <i data-lucide="trash-2" class="w-3 h-3"></i>
               </button>
             </div>
@@ -865,7 +922,7 @@
           <div class="px-3 py-1">${tableRows}</div>
         </div>`;
       }).join(''));
-      lucide.createIcons();
+      icons();
     }
 
     function timeSince(date) {
@@ -875,8 +932,10 @@
       return `${Math.floor(s / 3600)}h ago`;
     }
 
-    return { add, remove, edit, search };
+    return { add, remove, edit, search, render };
   })();
+
+  document.addEventListener('DOMContentLoaded', () => App.init());
   </script>
 </body>
 </html>
