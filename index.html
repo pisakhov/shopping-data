@@ -900,8 +900,7 @@
       el('panel-middle').addEventListener('click', e => {
         const btn = e.target.closest('[data-action]');
         if (!btn) return;
-        const { action, id, schedule } = btn.dataset;
-        if (action === 'set-schedule')     setSchedule(id, schedule);
+        const { action, id } = btn.dataset;
         if (action === 'toggle-subscribe') toggleSubscribe(id);
         if (action === 'remove-table')     removeTable(id);
         if (action === 'run-test')         runTest(id);
@@ -911,13 +910,7 @@
         const target = e.target;
         if (!target.dataset.action) return;
         const { action, id } = target.dataset;
-        if (action === 'set-schedule') {
-          if (target.value === 'custom') {
-            target.nextElementSibling.focus();
-          } else {
-            setSchedule(id, target.value);
-          }
-        }
+        if (action === 'set-schedule') setSchedule(id, target.value);
       });
 
       el('deploy-btn').addEventListener('click', deployBundle);
