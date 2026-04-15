@@ -25,46 +25,71 @@
     .log-error   { color: #FF3C28; }
     .log-info    { color: #255BE3; }
     .log-warn    { color: #fbbf24; }
-    ::-webkit-scrollbar       { width: 6px; height: 6px; }
+    ::-webkit-scrollbar       { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: #0F1632; }
     ::-webkit-scrollbar-thumb { background: #255BE3; border-radius: 3px; }
     .fade-in { animation: fadeIn 0.15s ease-in; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
     .border-l-amber { border-left: 4px solid #f59e0b !important; }
-    .btn-citi       { background: #255BE3; color: #fff; }
-    .btn-citi:hover { background: #1a47c4; }
-    .active-sel     { background: #255BE3 !important; color: #fff !important; border-color: #255BE3 !important; }
+    .btn-citi        { background: #255BE3; color: #fff; }
+    .btn-citi:hover  { background: #1a47c4; }
+    .active-sel      { background: #255BE3 !important; color: #fff !important; border-color: #255BE3 !important; }
     .panel-bg    { background: #0F1632; }
     .panel-card  { background: #162044; border: 1px solid #1e2d5a; }
     .panel-muted { color: #8896b8; }
-    /* hover utility classes replacing inline onmouseenter */
-    .btn-dark       { background: #1e2d5a; color: #c7d2e8; }
-    .btn-dark:hover { background: #255BE3; color: #fff; }
+    .btn-dark        { background: #1e2d5a; color: #c7d2e8; }
+    .btn-dark:hover  { background: #255BE3; color: #fff; }
     .btn-sched       { background: #1e2d5a; color: #8896b8; }
     .btn-sched:hover { background: #253660; color: #fff; }
     .btn-sched.active { background: #255BE3; color: #fff; }
-    .btn-danger       { background: #3b0a08; color: #FF3C28; }
-    .btn-danger:hover { background: #5c1410; color: #FF3C28; }
-    .btn-green       { background: #166534; color: #86efac; }
-    .btn-green:hover { background: #14532d; color: #86efac; }
+    .btn-danger        { background: #3b0a08; color: #FF3C28; }
+    .btn-danger:hover  { background: #5c1410; color: #FF3C28; }
+    .btn-green        { background: #166534; color: #86efac; }
+    .btn-green:hover  { background: #14532d; color: #86efac; }
     .mkt-edit        { background: #1e2d5a; color: #c7d2e8; }
     .mkt-edit:hover  { background: #255BE3; color: #fff; }
+    /* Middle panel slide transition */
+    #panel-middle {
+      overflow: hidden;
+      transition: max-width 0.35s cubic-bezier(.4,0,.2,1), opacity 0.25s ease;
+    }
+    #panel-middle.collapsed { max-width: 0 !important; opacity: 0; pointer-events: none; }
+    #panel-middle.expanded  { max-width: 800px; opacity: 1; }
   </style>
 </head>
 <body class="h-screen overflow-hidden">
 
-  <div class="h-full flex">
+  <!-- Mobile nav bar (visible only on small screens) -->
+  <div class="md:hidden flex items-center justify-between px-4 py-2 bg-white border-b border-gray-200">
+    <div class="flex items-center gap-2">
+      <i data-lucide="database" class="w-4 h-4 text-citi"></i>
+      <span class="text-sm font-bold text-ink">API → Postgres</span>
+    </div>
+    <div class="flex gap-2">
+      <button id="mob-btn-builder" class="px-2 py-1 rounded text-xs btn-citi font-medium">Builder</button>
+      <button id="mob-btn-market"  class="px-2 py-1 rounded text-xs border border-gray-300 text-gray-600 font-medium">Market</button>
+    </div>
+  </div>
+
+  <div class="flex h-full md:h-screen overflow-hidden">
 
     <!-- Left: Selection -->
-    <div id="panel-left" class="flex-1 p-4 overflow-y-auto bg-white border-r border-gray-200">
+    <div id="panel-left" class="w-full md:flex-1 p-3 md:p-4 overflow-y-auto bg-white border-r border-gray-200 md:block">
       <div class="max-w-2xl mx-auto space-y-3">
 
-        <div class="flex items-center justify-between">
+        <div class="hidden md:flex items-center justify-between">
           <div class="flex items-center gap-2">
             <i data-lucide="database" class="w-4 h-4 text-citi"></i>
-            <h1 class="text-lg font-bold tracking-tight text-ink">API → Postgres</h1>
+            <h1 class="text-base font-bold tracking-tight text-ink">API → Postgres</h1>
           </div>
           <button id="btn-reset" class="flex items-center gap-1 text-xs text-gray-400 hover:text-ink transition-colors">
+            <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Reset
+          </button>
+        </div>
+        <!-- Mobile reset -->
+        <div class="flex md:hidden items-center justify-between pt-1">
+          <span class="text-xs font-semibold text-gray-500">Select a data source</span>
+          <button id="btn-reset-mob" class="flex items-center gap-1 text-xs text-gray-400 hover:text-ink transition-colors">
             <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Reset
           </button>
         </div>
@@ -106,7 +131,7 @@
         <!-- Step 5: Table Name + Add -->
         <div id="step5" class="rounded-lg border-2 p-3 hidden fade-in space-y-2" style="background:#eef2ff;border-color:#255BE3">
           <div>
-            <label class="text-xs font-semibold text-gray-500 block mb-1">Postgres Table Name</label>
+            <label class="text-xs font-semibold text-gray-500 block mb-1">5. Postgres Table Name</label>
             <input type="text" id="table-name-input"
               class="w-full px-3 py-2 border rounded text-sm font-mono focus:outline-none focus:ring-2 focus:ring-citi">
             <p id="table-name-warning" class="text-xs mt-1 hidden" style="color:#FF3C28">Table name already exists — will be suffixed.</p>
@@ -119,43 +144,39 @@
       </div>
     </div>
 
-    <!-- Middle: Bundle -->
-    <div id="panel-middle" class="flex-[1.4] flex flex-col min-h-0 panel-bg text-white">
+    <!-- Middle: Bundle (hidden until first table added) -->
+    <div id="panel-middle" class="collapsed flex-[1.4] flex flex-col min-h-0 panel-bg text-white md:block hidden">
 
       <!-- Bundle Header -->
-      <div class="p-4 flex-shrink-0" style="border-bottom:1px solid #1e2d5a">
+      <div class="p-3 md:p-4 flex-shrink-0" style="border-bottom:1px solid #1e2d5a">
         <div class="flex items-center justify-between mb-3">
           <div>
-            <h2 class="font-bold text-base tracking-tight">Data Bundle</h2>
-            <p class="text-xs panel-muted mt-0.5">One bundle · multiple Postgres tables · deployed together</p>
+            <h2 class="font-bold text-sm md:text-base tracking-tight">Data Bundle</h2>
+            <p class="text-xs panel-muted mt-0.5 hidden md:block">One bundle · multiple Postgres tables · deployed together</p>
           </div>
           <div class="flex items-center gap-2">
             <span id="bundle-table-count" class="text-xs panel-muted"></span>
             <button id="deploy-btn"
-              class="flex items-center gap-1.5 px-4 py-1.5 rounded text-xs font-bold transition-colors opacity-50 cursor-not-allowed"
+              class="flex items-center gap-1.5 px-3 md:px-4 py-1.5 rounded text-xs font-bold transition-colors opacity-50 cursor-not-allowed"
               style="background:#255BE3;color:#fff" disabled>
-              <i data-lucide="rocket" class="w-3 h-3"></i> Deploy Bundle
+              <i data-lucide="rocket" class="w-3 h-3"></i>
+              <span class="hidden sm:inline">Deploy Bundle</span>
+              <span class="sm:hidden">Deploy</span>
             </button>
           </div>
         </div>
         <div class="flex gap-2 items-center">
-          <input type="text" id="bundle-name" placeholder="Name your bundle  e.g. regime_model"
-            class="flex-1 px-3 py-1.5 rounded text-sm font-mono focus:outline-none focus:ring-2 focus:ring-citi"
+          <input type="text" id="bundle-name" placeholder="Bundle name e.g. regime_model"
+            class="flex-1 px-3 py-1.5 rounded text-xs md:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-citi"
             style="background:#162044;border:1px solid #1e2d5a;color:#fff">
-          <span class="text-xs panel-muted">·</span>
           <input type="text" id="bundle-desc" placeholder="Description (optional)"
-            class="flex-1 px-3 py-1.5 rounded text-sm focus:outline-none focus:ring-2 focus:ring-citi"
+            class="flex-1 px-3 py-1.5 rounded text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-citi hidden md:block"
             style="background:#162044;border:1px solid #1e2d5a;color:#fff">
         </div>
       </div>
 
       <!-- Bundle Tables List -->
-      <div class="flex-1 p-3 overflow-y-auto space-y-2 min-h-0" id="bundle-tables">
-        <div class="text-center py-16 text-sm" style="color:#8896b8">
-          No tables in bundle yet<br>
-          <span class="text-xs opacity-60">Select an endpoint on the left and click "Add to Bundle"</span>
-        </div>
-      </div>
+      <div class="flex-1 p-2 md:p-3 overflow-y-auto space-y-2 min-h-0" id="bundle-tables"></div>
 
       <!-- Logs Panel -->
       <div id="logs-panel" class="hidden flex-shrink-0" style="border-top:1px solid #1e2d5a">
@@ -163,11 +184,10 @@
           <div class="flex items-center gap-2">
             <i data-lucide="terminal" class="w-3 h-3 panel-muted"></i>
             <span class="text-xs font-semibold">Test Logs</span>
-            <span id="logs-badge" class="hidden px-1.5 py-0.5 rounded-full text-xs" style="background:#255BE3"></span>
           </div>
           <i data-lucide="chevron-down" id="logs-toggle" class="w-3 h-3 panel-muted"></i>
         </div>
-        <div id="logs-content" class="hidden p-3 h-44 overflow-y-auto text-xs font-mono space-y-0.5" style="background:#060d1f"></div>
+        <div id="logs-content" class="hidden p-3 h-36 overflow-y-auto text-xs font-mono space-y-0.5" style="background:#060d1f"></div>
       </div>
 
       <!-- Preview Panel -->
@@ -179,16 +199,17 @@
           </div>
           <i data-lucide="chevron-down" id="preview-toggle" class="w-3 h-3 panel-muted"></i>
         </div>
-        <div id="preview-content" class="hidden p-3 overflow-x-auto text-xs max-h-52" style="background:#060d1f"></div>
+        <div id="preview-content" class="hidden p-3 overflow-x-auto text-xs max-h-44" style="background:#060d1f"></div>
       </div>
 
     </div>
 
     <!-- Right: Marketplace -->
-    <div id="panel-marketplace" class="flex flex-col min-h-0 border-l flex-shrink-0" style="width:340px;border-color:#1e2d5a;background:#f4f5f8">
-      <div class="flex items-center gap-2 px-4 py-3 bg-white border-b border-gray-200 flex-shrink-0">
+    <div id="panel-marketplace" class="hidden md:flex flex-col min-h-0 border-l flex-shrink-0 w-full md:w-72 lg:w-80" style="border-color:#1e2d5a;background:#f4f5f8">
+      <div class="flex items-center gap-2 px-3 py-2.5 bg-white border-b border-gray-200 flex-shrink-0">
         <i data-lucide="store" class="w-4 h-4 text-citi"></i>
-        <h2 class="font-bold text-base tracking-tight text-ink">Marketplace</h2>
+        <h2 class="font-bold text-sm tracking-tight text-ink">Marketplace</h2>
+        <span id="market-count" class="ml-auto text-xs panel-muted"></span>
       </div>
       <div class="px-3 py-2 bg-white border-b border-gray-100 flex-shrink-0">
         <div class="flex items-center gap-2 px-2 py-1.5 rounded border border-gray-200 bg-gray-50">
@@ -197,7 +218,7 @@
             class="flex-1 bg-transparent text-xs outline-none text-gray-700 placeholder-gray-400">
         </div>
       </div>
-      <div id="market-list" class="flex-1 p-3 overflow-y-auto space-y-3 min-h-0"></div>
+      <div id="market-list" class="flex-1 p-2.5 overflow-y-auto space-y-2 min-h-0"></div>
     </div>
 
   </div>
@@ -352,6 +373,20 @@
       catalog = DEFAULT_CATALOG;
       renderProviders();
       icons();
+    }
+
+    function setMiddlePanel(open) {
+      const mp = el('panel-middle');
+      if (open) {
+        mp.classList.remove('hidden', 'collapsed');
+        mp.classList.add('expanded', 'flex');
+      } else {
+        mp.classList.remove('expanded');
+        mp.classList.add('collapsed');
+        setTimeout(() => {
+          if (mp.classList.contains('collapsed')) mp.classList.add('hidden');
+        }, 360);
+      }
     }
 
     function renderProviders() {
@@ -515,6 +550,7 @@
         record: catalog[vendor].products[product].endpoints[endpoint]
       });
 
+      setMiddlePanel(true);
       renderBundle();
       vendor = null; product = null; endpoint = null; schema = null; fieldSel = {};
       hideFrom(2);
@@ -542,12 +578,7 @@
       onBundleNameChange();
 
       if (!count) {
-        container.innerHTML = `<div class="text-center py-16 text-sm" style="color:#8896b8">
-          <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 opacity-30"></i><br>
-          No tables in bundle yet<br>
-          <span class="text-xs opacity-60">Select an endpoint on the left and click "Add to Bundle"</span>
-        </div>`;
-        icons();
+        setMiddlePanel(false);
         return;
       }
 
@@ -568,11 +599,11 @@
           ? `<button class="flex items-center gap-1 px-3 py-1 rounded text-xs font-medium transition-colors btn-green" data-action="toggle-subscribe" data-id="${t.id}"><i data-lucide="circle-check" class="w-3 h-3"></i> Running</button>`
           : `<button class="flex items-center gap-1 px-3 py-1 rounded text-xs font-medium transition-colors btn-citi" data-action="toggle-subscribe" data-id="${t.id}"><i data-lucide="zap" class="w-3 h-3"></i> Subscribe</button>`;
 
-        return `<div class="rounded-lg p-3 fade-in panel-card">
+        return `<div class="rounded-lg p-2.5 fade-in panel-card">
           <div class="flex items-center gap-2 mb-2">
             <span class="text-xs font-bold px-2 py-0.5 rounded" style="background:#1e2d5a;color:#8896b8">T${idx + 1}</span>
             <div class="w-1.5 h-1.5 rounded-full shrink-0" style="background:${dot}"></div>
-            <span class="font-semibold text-sm text-white">${t.vendor}</span>
+            <span class="font-semibold text-xs text-white">${t.vendor}</span>
             <span class="text-xs" style="color:#8896b8">›</span>
             <span class="text-xs" style="color:#c7d2e8">${t.product}</span>
             <span class="text-xs" style="color:#8896b8">›</span>
@@ -585,9 +616,9 @@
           <div class="flex items-center gap-2 mb-2 text-xs">
             <span style="color:#8896b8">Table:</span>
             <code class="px-1.5 py-0.5 rounded font-mono text-xs" style="background:#0F1632;color:#93c5fd">${t.tableName}</code>
-            <span style="color:#8896b8">${t.schema.length} fields</span>
+            <span style="color:#8896b8">${t.schema.length} cols</span>
             <button class="ml-auto flex items-center gap-1 px-2 py-1 rounded text-xs btn-danger transition-colors"
-              data-action="remove-table" data-id="${t.id}"><i data-lucide="trash-2" class="w-3 h-3"></i> Remove</button>
+              data-action="remove-table" data-id="${t.id}"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
           </div>
           <div class="flex items-center gap-1.5 flex-wrap">
             ${scheds}
@@ -733,6 +764,7 @@
       tables = JSON.parse(JSON.stringify(b.tables));
       el('bundle-name').value = b.name;
       el('bundle-desc').value = b.desc || '';
+      setMiddlePanel(true);
       renderBundle();
       reset();
     }
@@ -753,7 +785,6 @@
     };
 
     function bindEvents() {
-      // Left panel: delegated clicks
       el('panel-left').addEventListener('click', e => {
         const btn = e.target.closest('[data-action]');
         if (!btn) return;
@@ -763,7 +794,6 @@
         if (action === 'select-endpoint') selectEndpoint(ep);
       });
 
-      // Middle panel: delegated clicks
       el('panel-middle').addEventListener('click', e => {
         const btn = e.target.closest('[data-action]');
         if (!btn) return;
@@ -774,47 +804,53 @@
         if (action === 'run-test')         runTest(id);
       });
 
-      // Middle panel: deploy button
       el('deploy-btn').addEventListener('click', deployBundle);
-
-      // Middle panel: panel toggles
       el('logs-header').addEventListener('click',    () => UI.togglePanel('logs'));
       el('preview-header').addEventListener('click', () => UI.togglePanel('preview'));
-
-      // Left panel: reset
       el('btn-reset').addEventListener('click', reset);
-
-      // Left panel: add to bundle
+      el('btn-reset-mob').addEventListener('click', reset);
       el('btn-add-bundle').addEventListener('click', addToBundle);
-
-      // Left panel: select all fields checkbox
       el('select-all-fields').addEventListener('change', e => toggleAllFields(e.target.checked));
 
-      // Left panel: individual field checkboxes (delegated)
       el('mapping-list').addEventListener('change', e => {
         if (e.target.classList.contains('field-checkbox')) onFieldToggle(e.target);
       });
 
-      // Left panel: table name duplicate warning
       el('table-name-input').addEventListener('input', () => {
         const val      = el('table-name-input').value.trim();
         const existing = tables.map(t => t.tableName);
         existing.includes(val) ? show('table-name-warning') : hide('table-name-warning');
       });
 
-      // Middle panel: bundle name change
       el('bundle-name').addEventListener('input', onBundleNameChange);
-
-      // Right panel: search
       el('market-search').addEventListener('input', e => Market.search(e.target.value));
 
-      // Right panel: marketplace actions (delegated)
       el('market-list').addEventListener('click', e => {
         const btn = e.target.closest('[data-action]');
         if (!btn) return;
         const { action, id } = btn.dataset;
         if (action === 'market-edit')   Market.edit(id);
         if (action === 'market-remove') Market.remove(id);
+      });
+
+      // Mobile tab switching
+      el('mob-btn-builder').addEventListener('click', () => {
+        el('panel-left').classList.remove('hidden');
+        el('panel-marketplace').classList.add('hidden');
+        el('mob-btn-builder').classList.add('btn-citi');
+        el('mob-btn-builder').classList.remove('border', 'border-gray-300', 'text-gray-600');
+        el('mob-btn-market').classList.remove('btn-citi');
+        el('mob-btn-market').classList.add('border', 'border-gray-300', 'text-gray-600');
+      });
+
+      el('mob-btn-market').addEventListener('click', () => {
+        el('panel-left').classList.add('hidden');
+        el('panel-marketplace').classList.remove('hidden');
+        el('panel-marketplace').classList.add('flex');
+        el('mob-btn-market').classList.add('btn-citi');
+        el('mob-btn-market').classList.remove('border', 'border-gray-300', 'text-gray-600');
+        el('mob-btn-builder').classList.remove('btn-citi');
+        el('mob-btn-builder').classList.add('border', 'border-gray-300', 'text-gray-600');
       });
     }
   })();
@@ -855,71 +891,94 @@
           )
         : bundles;
 
+      const countEl = el('market-count');
+      if (countEl) countEl.textContent = bundles.length ? `${bundles.length} bundle${bundles.length > 1 ? 's' : ''}` : '';
+
       if (!bundles.length) {
-        setHTML('market-list', `<div class="flex flex-col items-center justify-center py-16 text-center">
-          <i data-lucide="inbox" class="w-10 h-10 mb-3" style="color:#c7d2e8"></i>
-          <p class="text-sm font-medium text-gray-500">No bundles deployed yet</p>
-          <p class="text-xs text-gray-400 mt-1">Build a bundle and click Deploy</p>
+        setHTML('market-list', `<div class="flex flex-col items-center justify-center py-12 text-center">
+          <i data-lucide="inbox" class="w-8 h-8 mb-2" style="color:#c7d2e8"></i>
+          <p class="text-sm font-medium text-gray-500">No bundles yet</p>
+          <p class="text-xs text-gray-400 mt-1">Deploy a bundle to see it here</p>
         </div>`);
         icons();
         return;
       }
 
       if (!visible.length) {
-        setHTML('market-list', `<div class="text-center py-10 text-xs text-gray-400">No results for "<strong>${q}</strong>"</div>`);
+        setHTML('market-list', `<div class="text-center py-8 text-xs text-gray-400">No results for "<strong>${q}</strong>"</div>`);
         icons();
         return;
       }
 
       setHTML('market-list', visible.map(b => {
-        const ago       = timeSince(b.deployedAt);
-        const tCount    = b.tables.length;
-        const vendors   = [...new Set(b.tables.map(t => t.vendor))].join(', ');
+        const ago      = timeSince(b.deployedAt);
+        const tCount   = b.tables.length;
+        const totalCols = b.tables.reduce((s, t) => s + t.schema.length, 0);
+        const vendors  = [...new Set(b.tables.map(t => t.vendor))];
+
+        const vendorBadges = vendors.map(v =>
+          `<span class="px-1.5 py-0.5 rounded text-xs font-medium" style="background:#eef2ff;color:#255BE3">${v}</span>`
+        ).join('');
+
         const tableRows = b.tables.map(t => {
           const colMatch = q && t.schema.some(f => f.name.toLowerCase().includes(q));
-          const cols = colMatch
-            ? `<div class="mt-1 pl-5 space-y-0.5">${
+          const matchedCols = colMatch
+            ? `<div class="mt-1 flex flex-wrap gap-1">${
                 t.schema.filter(f => f.name.toLowerCase().includes(q))
-                  .map(f => `<span class="inline-block mr-1 px-1.5 py-0.5 rounded text-xs font-mono" style="background:#eff6ff;color:#2563eb">${f.name}</span>`)
+                  .map(f => `<span class="px-1 py-0.5 rounded text-xs font-mono" style="background:#eff6ff;color:#2563eb">${f.name}</span>`)
                   .join('')
               }</div>`
             : '';
-          return `<div class="py-1.5 border-b last:border-0" style="border-color:#e5e7eb">
-            <div class="flex items-center gap-2">
-              <i data-lucide="table-2" class="w-3 h-3 shrink-0" style="color:#8896b8"></i>
-              <code class="text-xs font-mono text-ink">${t.tableName}</code>
-              <span class="text-xs ml-auto" style="color:#8896b8">${t.vendor} › ${t.endpoint}</span>
-            </div>${cols}
+          return `<div class="flex items-start gap-1.5 py-1 border-b last:border-0" style="border-color:#f3f4f6">
+            <i data-lucide="table-2" class="w-3 h-3 mt-0.5 shrink-0 text-gray-400"></i>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center justify-between gap-2">
+                <code class="text-xs font-mono text-ink truncate">${t.tableName}</code>
+                <span class="text-xs shrink-0" style="color:#8896b8">${t.schema.length} cols</span>
+              </div>
+              ${matchedCols}
+            </div>
           </div>`;
         }).join('');
 
-        return `<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden fade-in">
-          <div class="px-3 py-2.5 flex items-start justify-between" style="background:#0F1632">
-            <div>
-              <div class="flex items-center gap-2 mb-0.5">
-                <i data-lucide="package" class="w-3.5 h-3.5 text-citi"></i>
-                <span class="font-bold text-sm text-white">${b.name}</span>
-                <span class="px-1.5 py-0.5 rounded-full text-xs" style="background:#1e2d5a;color:#8896b8">${tCount} table${tCount > 1 ? 's' : ''}</span>
+        return `<div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden fade-in">
+          <!-- Header -->
+          <div class="px-3 py-2 flex items-start justify-between gap-2" style="background:#0F1632">
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5 mb-1">
+                <i data-lucide="package" class="w-3 h-3 text-citi shrink-0"></i>
+                <span class="font-bold text-xs text-white truncate">${b.name}</span>
               </div>
-              ${b.desc ? `<p class="text-xs" style="color:#8896b8">${b.desc}</p>` : ''}
-              <p class="text-xs mt-0.5" style="color:#8896b8"><i data-lucide="clock" class="w-3 h-3 inline mr-1"></i>${ago}</p>
+              <!-- Stats row -->
+              <div class="flex items-center gap-2">
+                <span class="flex items-center gap-1 text-xs" style="color:#8896b8">
+                  <i data-lucide="layers" class="w-3 h-3"></i>${tCount} table${tCount > 1 ? 's' : ''}
+                </span>
+                <span class="text-xs" style="color:#3a4a6b">·</span>
+                <span class="flex items-center gap-1 text-xs" style="color:#8896b8">
+                  <i data-lucide="columns" class="w-3 h-3"></i>${totalCols} cols
+                </span>
+                <span class="text-xs ml-auto" style="color:#4a5a7a">${ago}</span>
+              </div>
             </div>
             <div class="flex gap-1 shrink-0">
-              <button class="flex items-center gap-1 px-2 py-1 rounded text-xs mkt-edit transition-colors"
+              <button class="flex items-center gap-1 px-1.5 py-1 rounded text-xs mkt-edit transition-colors"
                 data-action="market-edit" data-id="${b.id}">
-                <i data-lucide="pencil" class="w-3 h-3"></i> Edit
+                <i data-lucide="pencil" class="w-3 h-3"></i>
               </button>
-              <button class="flex items-center gap-1 px-2 py-1 rounded text-xs btn-danger transition-colors"
+              <button class="flex items-center gap-1 px-1.5 py-1 rounded text-xs btn-danger transition-colors"
                 data-action="market-remove" data-id="${b.id}">
                 <i data-lucide="trash-2" class="w-3 h-3"></i>
               </button>
             </div>
           </div>
-          <div class="px-3 py-1.5 flex items-center gap-2 border-b border-gray-100">
-            <i data-lucide="building-2" class="w-3 h-3 shrink-0" style="color:#8896b8"></i>
-            <span class="text-xs" style="color:#8896b8">${vendors}</span>
+          <!-- Vendor badges -->
+          <div class="px-3 py-1.5 flex flex-wrap gap-1 border-b border-gray-100">
+            ${vendorBadges}
           </div>
+          <!-- Tables -->
           <div class="px-3 py-1">${tableRows}</div>
+          ${b.desc ? `<div class="px-3 pb-2 text-xs text-gray-400 italic">${b.desc}</div>` : ''}
         </div>`;
       }).join(''));
       icons();
