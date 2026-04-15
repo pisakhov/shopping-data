@@ -46,8 +46,8 @@
 
   <div class="h-full flex">
 
-    <!-- Left: Selection (42%) -->
-    <div class="w-[42%] p-4 overflow-y-auto bg-white border-r border-gray-200">
+    <!-- Left: Selection -->
+    <div id="panel-left" class="w-[42%] p-4 overflow-y-auto bg-white border-r border-gray-200 transition-all duration-300">
       <div class="max-w-2xl mx-auto space-y-3">
 
         <div class="flex items-center justify-between">
@@ -110,8 +110,8 @@
       </div>
     </div>
 
-    <!-- Right: Bundle (58%) -->
-    <div class="w-[58%] flex flex-col min-h-0 panel-bg text-white">
+    <!-- Middle: Bundle -->
+    <div id="panel-middle" class="w-[58%] flex flex-col min-h-0 panel-bg text-white transition-all duration-300">
 
       <!-- Bundle Header -->
       <div class="p-4 flex-shrink-0" style="border-bottom:1px solid #1e2d5a">
@@ -176,6 +176,23 @@
       </div>
 
     </div>
+
+    <!-- Right: Marketplace -->
+    <div id="panel-marketplace" class="hidden flex-col min-h-0 border-l transition-all duration-300" style="width:0;border-color:#1e2d5a;background:#f4f5f8">
+      <!-- Header -->
+      <div class="flex items-center justify-between p-4 bg-white border-b border-gray-200 flex-shrink-0">
+        <div class="flex items-center gap-2">
+          <i data-lucide="store" class="w-4 h-4 text-citi"></i>
+          <h2 class="font-bold text-base tracking-tight text-ink">Marketplace</h2>
+        </div>
+        <button onclick="Market.close()" class="flex items-center gap-1 text-xs text-gray-400 hover:text-ink transition-colors">
+          <i data-lucide="x" class="w-3 h-3"></i> Close
+        </button>
+      </div>
+      <!-- Bundle list -->
+      <div id="market-list" class="flex-1 p-4 overflow-y-auto space-y-3 min-h-0"></div>
+    </div>
+
   </div>
 
   <script>
@@ -624,9 +641,13 @@
         [600 + tables.length * 600 + 200, 'success', `✓ Bundle "${name}" deployed successfully`]
       ];
 
+      const desc = el('bundle-desc').value.trim();
+      const snapshot = { id: uid(), name, desc, tables: JSON.parse(JSON.stringify(tables)), deployedAt: new Date() };
+
       steps.forEach(([delay, type, msg]) => {
         setTimeout(() => addLog(type, msg), delay);
       });
+      setTimeout(() => Market.add(snapshot), 600 + tables.length * 600 + 400);
     }
 
     // ── Test single table ──
@@ -729,6 +750,106 @@
       setSchedule, toggleSubscribe, removeTable,
       deployBundle, runTest
     };
+  })();
+
+  // ─── Marketplace ──────────────────────────────────────────────────────────
+  const Market = (() => {
+    let bundles = [];
+
+    function open() {
+      const mp  = el('panel-marketplace');
+      mp.classList.remove('hidden');
+      mp.classList.add('flex');
+      mp.style.width = '420px';
+      el('panel-left').style.width    = 'calc(42% - 210px)';
+      el('panel-middle').style.width  = 'calc(58% - 210px)';
+      lucide.createIcons();
+    }
+
+    function close() {
+      const mp = el('panel-marketplace');
+      mp.style.width = '0';
+      setTimeout(() => { mp.classList.add('hidden'); mp.classList.remove('flex'); }, 300);
+      el('panel-left').style.width   = '';
+      el('panel-middle').style.width = '';
+    }
+
+    function add(bundle) {
+      bundles.push(bundle);
+      render();
+      open();
+    }
+
+    function remove(id) {
+      bundles = bundles.filter(b => b.id !== id);
+      render();
+      if (!bundles.length) close();
+    }
+
+    function render() {
+      setHTML('market-list', bundles.map(b => {
+        const ago     = timeSince(b.deployedAt);
+        const tCount  = b.tables.length;
+        const vendors = [...new Set(b.tables.map(t => t.vendor))].join(', ');
+        const tables  = b.tables.map(t => `
+          <div class="flex items-center gap-2 py-1.5 border-b last:border-0" style="border-color:#e5e7eb">
+            <i data-lucide="table-2" class="w-3 h-3 shrink-0" style="color:#8896b8"></i>
+            <code class="text-xs font-mono text-ink">${t.tableName}</code>
+            <span class="text-xs ml-auto" style="color:#8896b8">${t.vendor} › ${t.endpoint}</span>
+          </div>`).join('');
+
+        return `<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden fade-in">
+          <!-- bundle header -->
+          <div class="px-4 py-3 flex items-start justify-between" style="background:#0F1632">
+            <div>
+              <div class="flex items-center gap-2 mb-0.5">
+                <i data-lucide="package" class="w-4 h-4 text-citi"></i>
+                <span class="font-bold text-sm text-white">${b.name}</span>
+                <span class="px-1.5 py-0.5 rounded-full text-xs font-medium" style="background:#1e2d5a;color:#8896b8">${tCount} table${tCount > 1 ? 's' : ''}</span>
+              </div>
+              ${b.desc ? `<p class="text-xs mt-0.5" style="color:#8896b8">${b.desc}</p>` : ''}
+              <p class="text-xs mt-1" style="color:#8896b8"><i data-lucide="clock" class="w-3 h-3 inline mr-1"></i>${ago}</p>
+            </div>
+            <div class="flex gap-1.5 shrink-0">
+              <button onclick="Market.edit('${b.id}')" class="flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors" style="background:#1e2d5a;color:#c7d2e8" onmouseenter="this.style.background='#255BE3';this.style.color='#fff'" onmouseleave="this.style.background='#1e2d5a';this.style.color='#c7d2e8'">
+                <i data-lucide="pencil" class="w-3 h-3"></i> Edit
+              </button>
+              <button onclick="Market.remove('${b.id}')" class="flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors" style="background:#3b0a08;color:#FF3C28" onmouseenter="this.style.background='#5c1410'" onmouseleave="this.style.background='#3b0a08'">
+                <i data-lucide="trash-2" class="w-3 h-3"></i>
+              </button>
+            </div>
+          </div>
+          <!-- vendors badge row -->
+          <div class="px-4 py-2 flex items-center gap-2 border-b border-gray-100">
+            <i data-lucide="building-2" class="w-3 h-3 shrink-0" style="color:#8896b8"></i>
+            <span class="text-xs" style="color:#8896b8">${vendors}</span>
+          </div>
+          <!-- tables -->
+          <div class="px-4 py-2">${tables}</div>
+        </div>`;
+      }).join(''));
+      lucide.createIcons();
+    }
+
+    function edit(id) {
+      const b    = bundles.find(b => b.id === id);
+      const name = prompt('Bundle name:', b.name);
+      if (name === null) return;
+      const desc = prompt('Description:', b.desc);
+      if (desc === null) return;
+      b.name = name.trim() || b.name;
+      b.desc = desc.trim();
+      render();
+    }
+
+    function timeSince(date) {
+      const s = Math.floor((new Date() - new Date(date)) / 1000);
+      if (s < 60)   return 'just now';
+      if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+      return `${Math.floor(s / 3600)}h ago`;
+    }
+
+    return { add, remove, edit, close };
   })();
   </script>
 </body>
