@@ -835,11 +835,15 @@
         setTimeout(() => { if (!marketOpen) mp.classList.remove('flex'); }, 360);
       }
       icons();
+      localStorage.setItem('marketOpen', marketOpen);
     }
 
     return {
       init() {
         loadCatalog();
+        const savedMarket = localStorage.getItem('marketOpen');
+        if (savedMarket !== null) marketOpen = savedMarket === 'true';
+        if (!marketOpen) toggleMarketplace();
         icons();
         Market.render();
         bindEvents();
